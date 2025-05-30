@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reminder Emmeril Hotspot</title>
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css"
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+
+
+<body>
+    <div class="container mt-5" x-data="reminderApp()" x-init="init()">
+        <nav class="navbar navbar-light pt-3 mb-4">
+            <p class="text-start">Selamat datang, <br><i class="fa-solid fa-user"></i> <span x-text="username"></span>
+            </p>
+            <button class="btn btn-danger" @click="logout">Logout</button>
+        </nav>
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Form Kategori</h5>
+                        <form @submit.prevent="submitCategoryForm">
+                            <input type="text" class="form-control mb-2" placeholder="Nama Kategori"
+                                x-model="categoryForm.nameCategory" required>
+                            <input type="hidden" x-model="categoryForm.id">
+                            <button type="submit" class="btn btn-primary me-2"
+                                x-text="categoryForm.id ? 'Update' : 'Tambah'"></button>
+                            <button type="button" class="btn btn-secondary" @click="resetCategoryForm"
+                                x-show="categoryForm.id">Batal</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Daftar Kategori</h5>
+                        <ul class="list-group">
+                            <template x-for="cat in allCategories" :key="cat.id">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span x-text="cat.nameCategory"></span>
+                                    <div>
+                                        <button class="btn btn-sm btn-warning me-1"
+                                            @click="editCategory(cat)">Edit</button>
+                                        <button class="btn btn-sm btn-danger"
+                                            @click="deleteCategory(cat.id)">Hapus</button>
+                                    </div>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row">
+            <!-- Form Aset -->
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Tambah / Edit Aset</h5>
+                        <form @submit.prevent="submitAssetForm" enctype="multipart/form-data">
+                            <div class="mb-2">
+                                <input type="hidden" x-model="assetForm.id">
+                                <label>Kategori</label>
+                                <select class="form-select" x-model="assetForm.nameCategory" required>
+                                    <option value="" disabled>Pilih Kategori</option>
+                                    <template x-for="cat in allCategories" :key="cat.id">
+                                        <option x-text="cat.nameCategory" :value="cat.nameCategory"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label>Deskripsi</label>
+                                <input type="text" class="form-control" x-model="assetForm.description" required>
+                            </div>
+                            <div class="mb-2">
+                                <label>Serial Number</label>
+                                <input type="text" class="form-control" x-model="assetForm.serialNumber" required>
+                            </div>
+                            <div class="mb-2">
+                                <label>Jumlah</label>
+                                <input type="number" class="form-control" x-model="assetForm.quantity" min="1" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Harga</label>
+                                <input type="number" class="form-control" x-model="assetForm.price" min="0" required>
+                            </div>
+                            <div class="mb-2">
+                                <label>Foto Aset</label>
+                                <input type="file" class="form-control" @change="handlePhotoUpload">
+                            </div>
+                            <button type="submit" class="btn btn-primary me-2"
+                                x-text="assetForm.id ? 'Update' : 'Tambah'"></button>
+                            <button type="button" class="btn btn-secondary" @click="resetAssetForm"
+                                x-show="assetForm.id">Batal</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- List Aset -->
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Daftar Aset</h5>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Kategori</th>
+                                    <th>Deskripsi</th>
+                                    <th>Serial</th>
+                                    <th>Qty</th>
+                                    <th>Harga</th>
+                                    <th>Aksi</th>
+                                    <th>Foto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="(item, i) in assets" :key="item.id">
+                                    <tr>
+                                        <td x-text="i + 1"></td>
+                                        <td x-text="item.nameCategory"></td>
+                                        <td x-text="item.description"></td>
+                                        <td x-text="item.serialNumber"></td>
+                                        <td x-text="item.quantity"></td>
+                                        <td x-text="item.price.toLocaleString()"></td>
+                                        <td>
+                                            <img crossorigin="anonymous" :src="`${API_BASE_URL}/uploads/${item.photo}`"
+                                                alt="Foto" style="width: 60px" />
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-warning"
+                                                @click="editAsset(item)">Edit</button>
+                                            <button class="btn btn-sm btn-danger"
+                                                @click="deleteAsset(item.id)">Hapus</button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <div id="toast" class="toast position-fixed bottom-0 end-0 m-3"></div>
+
+
+    <script src="./assets/js/script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="./assets/js/jquery.min.js"></script>
+    <script src="./assets/js/main.js"></script>
+</body>
+
+</html>
