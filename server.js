@@ -19,7 +19,7 @@ const multer = require("multer");
 //   })
 // );
 app.use(cors());
-app.use(express());
+app.use(express.json());
 app.use(helmet());
 app.use(compression());
 app.set("trust proxy", 1);
