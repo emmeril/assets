@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "id": 1748590060576,
+    "nameCategory": "Komputer",
+    "description": "dfs",
+    "serialNumber": "sfsd",
+    "quantity": 2,
+    "price": 100000,
+    "photo": "1748590060540.png"
+  }
+]
