@@ -150,6 +150,17 @@ const assetSchema = Joi.object({
   serialNumber: Joi.string().required(),
   quantity: Joi.number().min(1).required(),
   price: Joi.number().min(0).required(),
+  purchaseDate: Joi.string().required(), // format: yyyy-mm-dd (dari input[type=date])
+  division: Joi.string().required(),
+  username: Joi.string().required(),
+  brand: Joi.string().required(),
+
+  // Field opsional — hanya untuk non-printer
+  processor: Joi.string().allow("", null),
+  ram: Joi.string().allow("", null),
+  hdd: Joi.string().allow("", null),
+  os: Joi.string().allow("", null),
+
   photo: Joi.string().optional(),
 });
 
@@ -326,21 +337,61 @@ app.post(
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
-
-    const { nameCategory, description, serialNumber, quantity, price } = value;
-    const id = Date.now(); // ID unik menggunakan timestamp
-    const photo = req.file?.filename;
-    const asset = {
-      id,
+    const {
       nameCategory,
       description,
       serialNumber,
       quantity,
       price,
+      purchaseDate,
+      division,
+      username,
+      brand,
+      processor,
+      ram,
+      hdd,
+      os,
+    } = req.body;
+
+    if (
+      !nameCategory ||
+      !description ||
+      !serialNumber ||
+      !quantity ||
+      !price ||
+      !purchaseDate ||
+      !division ||
+      !username ||
+      !brand
+    ) {
+      return res.status(400).json({ message: "Semua field wajib diisi." });
+    }
+
+    const id = Date.now(); // ID unik
+    const photo = req.file?.filename;
+
+    // Hapus field jika kategori printer
+    const isPrinter = nameCategory.toLowerCase() === "printer";
+
+    const asset = {
+      id,
+      nameCategory,
+      description,
+      serialNumber,
+      quantity: Number(quantity),
+      price: Number(price),
+      purchaseDate,
+      division,
+      username,
+      brand,
       photo,
+      processor: isPrinter ? undefined : processor,
+      ram: isPrinter ? undefined : ram,
+      hdd: isPrinter ? undefined : hdd,
+      os: isPrinter ? undefined : os,
     };
 
-    // Simpan aset ke file JSON
+    // Simpan ke file JSON
     const assetsFilePath = path.join(__dirname, "database", "assets.json");
     try {
       await fs.access(assetsFilePath);
@@ -351,7 +402,7 @@ app.post(
       res.json({ message: "Aset berhasil ditambahkan!", asset });
     } catch (error) {
       console.error("Error saving asset:", error);
-      res.status(500).json({ message: "Failed to save asset" });
+      res.status(500).json({ message: "Gagal menyimpan aset." });
     }
   }
 );
@@ -410,16 +461,40 @@ app.put(
   async (req, res) => {
     const id = parseInt(req.params.id, 10);
 
-    // Ambil data dari form
-    const { nameCategory, description, serialNumber, quantity, price } =
-      req.body;
+    // Ambil data dari form (multipart/form-data)
+    const {
+      nameCategory,
+      description,
+      serialNumber,
+      quantity,
+      price,
+      purchaseDate,
+      division,
+      username,
+      brand,
+      processor,
+      ram,
+      hdd,
+      os,
+    } = req.body;
 
-    // Validasi manual (karena bukan JSON body)
-    if (!nameCategory || !description || !serialNumber || !quantity || !price) {
+    // Validasi manual minimum
+    if (
+      !nameCategory ||
+      !description ||
+      !serialNumber ||
+      !quantity ||
+      !price ||
+      !purchaseDate ||
+      !division ||
+      !username ||
+      !brand
+    ) {
       return res.status(400).json({ message: "Semua field wajib diisi!" });
     }
 
     const assetsFilePath = path.join(__dirname, "database", "assets.json");
+
     try {
       await fs.access(assetsFilePath);
       const data = await fs.readFile(assetsFilePath, "utf-8");
@@ -431,6 +506,7 @@ app.put(
       }
 
       const oldAsset = assets[assetIndex];
+      const isPrinter = nameCategory.toLowerCase() === "Printer";
 
       const updatedAsset = {
         id,
@@ -439,7 +515,15 @@ app.put(
         serialNumber,
         quantity: Number(quantity),
         price: Number(price),
-        photo: req.file ? req.file.filename : oldAsset.photo, // Pakai foto baru kalau ada
+        purchaseDate,
+        division,
+        username,
+        brand,
+        photo: req.file ? req.file.filename : oldAsset.photo,
+        processor: isPrinter ? undefined : processor,
+        ram: isPrinter ? undefined : ram,
+        hdd: isPrinter ? undefined : hdd,
+        os: isPrinter ? undefined : os,
       };
 
       assets[assetIndex] = updatedAsset;

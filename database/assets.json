@@ -6,6 +6,27 @@
     "serialNumber": "sfsd",
     "quantity": 2,
     "price": 100000,
-    "photo": "1748590060540.png"
+    "purchaseDate": "2025-05-30",
+    "division": "hrd",
+    "username": "a iki",
+    "brand": "lenovo",
+    "photo": "1748590060540.png",
+    "processor": "intel",
+    "ram": "2 GB",
+    "hdd": "250 GB",
+    "os": "Windows"
+  },
+  {
+    "id": 1748595774610,
+    "nameCategory": "Printer",
+    "description": "Beacukai",
+    "serialNumber": "12345678",
+    "quantity": 1,
+    "price": 100000,
+    "purchaseDate": "2025-05-30",
+    "division": "IT",
+    "username": "Hafri",
+    "brand": "Epson",
+    "photo": "1748595774563.jpeg"
   }
 ]

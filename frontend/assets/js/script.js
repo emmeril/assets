@@ -208,11 +208,20 @@ function reminderApp() {
     assetForm: {
       id: null,
       nameCategory: "",
+      purchaseDate: "",
+      division: "",
+      username: "",
+      brand: "",
       description: "",
       serialNumber: "",
       quantity: 1,
       price: 0,
+      processor: "",
+      ram: "",
+      hdd: "",
+      os: "",
     },
+
     categoryForm: {
       id: null,
       nameCategory: "",
@@ -302,6 +311,19 @@ function reminderApp() {
         formData.append("serialNumber", this.assetForm.serialNumber);
         formData.append("quantity", this.assetForm.quantity);
         formData.append("price", this.assetForm.price);
+        formData.append("purchaseDate", this.assetForm.purchaseDate);
+        formData.append("division", this.assetForm.division);
+        formData.append("username", this.assetForm.username);
+        formData.append("brand", this.assetForm.brand);
+
+        // Hanya kirim jika bukan printer
+        if (this.assetForm.nameCategory.toLowerCase() !== "Printer") {
+          formData.append("processor", this.assetForm.processor);
+          formData.append("ram", this.assetForm.ram);
+          formData.append("hdd", this.assetForm.hdd);
+          formData.append("os", this.assetForm.os);
+        }
+
         if (this.photoFile) formData.append("photo", this.photoFile);
 
         const token = localStorage.getItem("token");
@@ -357,12 +379,20 @@ function reminderApp() {
       this.assetForm = {
         id: null,
         nameCategory: "",
+        purchaseDate: "",
+        division: "",
+        username: "",
+        brand: "",
         description: "",
         serialNumber: "",
         quantity: 1,
         price: 0,
-        photoFile: null,
+        processor: "",
+        ram: "",
+        hdd: "",
+        os: "",
       };
+      this.photoFile = null;
     },
 
     async submitCategoryForm() {
