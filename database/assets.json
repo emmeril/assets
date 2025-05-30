@@ -28,5 +28,19 @@
     "username": "Hafri",
     "brand": "Epson",
     "photo": "1748595774563.jpeg"
+  },
+  {
+    "id": 1748597152618,
+    "kodeAsset": "PRI-0001",
+    "nameCategory": "Printer",
+    "description": "tt",
+    "serialNumber": "tt",
+    "quantity": 1,
+    "price": 24314,
+    "purchaseDate": "2025-05-30",
+    "division": "it",
+    "username": "tt",
+    "brand": "tt",
+    "photo": "1748597152591.jpeg"
   }
 ]

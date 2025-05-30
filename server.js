@@ -164,6 +164,21 @@ const assetSchema = Joi.object({
   photo: Joi.string().optional(),
 });
 
+// Fungsi untuk membuat kode aset berdasarkan kategori
+function generateAssetCode(assets, nameCategory) {
+  const prefix = nameCategory.substring(0, 3).toUpperCase();
+  const filtered = assets.filter((a) => a.kodeAsset?.startsWith(prefix));
+
+  const lastNumber = filtered.reduce((max, asset) => {
+    const match = asset.kodeAsset?.match(/\d+$/);
+    const num = match ? parseInt(match[0], 10) : 0;
+    return Math.max(max, num);
+  }, 0);
+
+  const nextNumber = (lastNumber + 1).toString().padStart(4, "0");
+  return `${prefix}-${nextNumber}`;
+}
+
 // Endpoint untuk mendapatkan daftar kategori
 app.get("/get-categories", authenticateToken, async (req, res) => {
   try {
@@ -328,6 +343,7 @@ app.get("/get-assets", authenticateToken, async (req, res) => {
   }
 });
 // Endpoint untuk menambahkan aset
+
 app.post(
   "/add-asset",
   upload.single("photo"),
@@ -337,6 +353,7 @@ app.post(
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
+
     const {
       nameCategory,
       description,
@@ -367,36 +384,38 @@ app.post(
       return res.status(400).json({ message: "Semua field wajib diisi." });
     }
 
-    const id = Date.now(); // ID unik
+    const assetsFilePath = path.join(__dirname, "database", "assets.json");
+    const id = Date.now();
     const photo = req.file?.filename;
 
-    // Hapus field jika kategori printer
-    const isPrinter = nameCategory.toLowerCase() === "printer";
-
-    const asset = {
-      id,
-      nameCategory,
-      description,
-      serialNumber,
-      quantity: Number(quantity),
-      price: Number(price),
-      purchaseDate,
-      division,
-      username,
-      brand,
-      photo,
-      processor: isPrinter ? undefined : processor,
-      ram: isPrinter ? undefined : ram,
-      hdd: isPrinter ? undefined : hdd,
-      os: isPrinter ? undefined : os,
-    };
-
-    // Simpan ke file JSON
-    const assetsFilePath = path.join(__dirname, "database", "assets.json");
     try {
       await fs.access(assetsFilePath);
       const data = await fs.readFile(assetsFilePath, "utf-8");
       const assets = JSON.parse(data || "[]");
+
+      // ✅ Tambah kode unik berdasarkan kategori
+      const kodeAsset = generateAssetCode(assets, nameCategory);
+      const isPrinter = nameCategory.toLowerCase() === "printer";
+
+      const asset = {
+        id,
+        kodeAsset,
+        nameCategory,
+        description,
+        serialNumber,
+        quantity: Number(quantity),
+        price: Number(price),
+        purchaseDate,
+        division,
+        username,
+        brand,
+        photo,
+        processor: isPrinter ? undefined : processor,
+        ram: isPrinter ? undefined : ram,
+        hdd: isPrinter ? undefined : hdd,
+        os: isPrinter ? undefined : os,
+      };
+
       assets.push(asset);
       await fs.writeFile(assetsFilePath, JSON.stringify(assets, null, 2));
       res.json({ message: "Aset berhasil ditambahkan!", asset });
@@ -406,6 +425,7 @@ app.post(
     }
   }
 );
+
 // Endpoint untuk mendapatkan daftar aset berdasarkan kategori
 app.get(
   "/get-assets-by-category/:category",
@@ -461,7 +481,6 @@ app.put(
   async (req, res) => {
     const id = parseInt(req.params.id, 10);
 
-    // Ambil data dari form (multipart/form-data)
     const {
       nameCategory,
       description,
@@ -478,7 +497,6 @@ app.put(
       os,
     } = req.body;
 
-    // Validasi manual minimum
     if (
       !nameCategory ||
       !description ||
@@ -506,10 +524,11 @@ app.put(
       }
 
       const oldAsset = assets[assetIndex];
-      const isPrinter = nameCategory.toLowerCase() === "Printer";
+      const isPrinter = nameCategory.toLowerCase() === "printer";
 
       const updatedAsset = {
         id,
+        kodeAsset: oldAsset.kodeAsset, // 👈 TETAPKAN kode lama
         nameCategory,
         description,
         serialNumber,
