@@ -403,48 +403,56 @@ app.get("/get-asset/:id", authenticateToken, async (req, res) => {
   }
 });
 // endpoint untuk memperbarui aset berdasarkan ID
-app.put("/update-asset/:id", authenticateToken, async (req, res) => {
-  const id = parseInt(req.params.id, 10); // Pastikan ID berupa integer
-  const { error, value } = assetSchema.validate(req.body);
+app.put(
+  "/update-asset/:id",
+  authenticateToken,
+  upload.single("photo"),
+  async (req, res) => {
+    const id = parseInt(req.params.id, 10);
 
-  if (error) {
-    return res.status(400).json({ message: error.details[0].message });
-  }
+    // Ambil data dari form
+    const { nameCategory, description, serialNumber, quantity, price } =
+      req.body;
 
-  const { nameCategory, description, serialNumber, quantity, price } = value;
-
-  // Load assets from file or database
-  const assetsFilePath = path.join(__dirname, "database", "assets.json");
-  try {
-    await fs.access(assetsFilePath);
-    const data = await fs.readFile(assetsFilePath, "utf-8");
-    const assets = JSON.parse(data || "[]");
-
-    // Find asset by ID
-    const assetIndex = assets.findIndex((a) => a.id === id);
-    if (assetIndex === -1) {
-      return res.status(404).json({ message: "Aset tidak ditemukan!" });
+    // Validasi manual (karena bukan JSON body)
+    if (!nameCategory || !description || !serialNumber || !quantity || !price) {
+      return res.status(400).json({ message: "Semua field wajib diisi!" });
     }
 
-    // Update asset
-    const updatedAsset = {
-      id,
-      nameCategory,
-      description,
-      serialNumber,
-      quantity,
-      price,
-    };
-    assets[assetIndex] = updatedAsset;
+    const assetsFilePath = path.join(__dirname, "database", "assets.json");
+    try {
+      await fs.access(assetsFilePath);
+      const data = await fs.readFile(assetsFilePath, "utf-8");
+      const assets = JSON.parse(data || "[]");
 
-    // Save updated assets to file
-    await fs.writeFile(assetsFilePath, JSON.stringify(assets, null, 2));
-    res.json({ message: "Aset berhasil diperbarui!", asset: updatedAsset });
-  } catch (error) {
-    console.error("Error updating asset:", error);
-    res.status(500).json({ message: "Failed to update asset" });
+      const assetIndex = assets.findIndex((a) => a.id === id);
+      if (assetIndex === -1) {
+        return res.status(404).json({ message: "Aset tidak ditemukan!" });
+      }
+
+      const oldAsset = assets[assetIndex];
+
+      const updatedAsset = {
+        id,
+        nameCategory,
+        description,
+        serialNumber,
+        quantity: Number(quantity),
+        price: Number(price),
+        photo: req.file ? req.file.filename : oldAsset.photo, // Pakai foto baru kalau ada
+      };
+
+      assets[assetIndex] = updatedAsset;
+
+      await fs.writeFile(assetsFilePath, JSON.stringify(assets, null, 2));
+      res.json({ message: "Aset berhasil diperbarui!", asset: updatedAsset });
+    } catch (error) {
+      console.error("Error updating asset:", error);
+      res.status(500).json({ message: "Gagal memperbarui aset." });
+    }
   }
-});
+);
+
 // Endpoint untuk menghapus aset berdasarkan ID
 app.delete("/delete-asset/:id", authenticateToken, async (req, res) => {
   const id = parseInt(req.params.id, 10); // Pastikan ID berupa integer
