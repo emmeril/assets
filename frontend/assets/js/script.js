@@ -581,7 +581,18 @@ function reminderApp() {
       if (this.perPage === -1) return 1;
       return Math.ceil(this.filteredAssets.length / this.perPage) || 1;
     },
-    
+
+    watch: {
+      searchQuery() {
+        this.currentPage = 1;
+      },
+      filters: {
+        handler() {
+          this.currentPage = 1;
+        },
+        deep: true,
+      },
+    },
     resetCategoryForm() {
       this.categoryForm = {
         id: null,
