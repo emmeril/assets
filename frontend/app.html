@@ -128,27 +128,28 @@
                                 <input type="number" class="form-control" x-model="assetForm.price" required min="0">
                             </div>
 
-                            <!-- Spesifikasi Tambahan -->
-                            <template x-if="assetForm.nameCategory.toLowerCase() !== 'printer'">
+                            <!-- Spesifikasi khusus untuk laptop dan komputer -->
+                            <template x-if="['laptop', 'komputer'].includes(assetForm.nameCategory?.toLowerCase())">
                                 <div>
                                     <div class="mb-2">
                                         <label>Prosesor</label>
-                                        <input type="text" class="form-control" x-model="assetForm.processor">
+                                        <input type="text" class="form-control" x-model="assetForm.processor" required>
                                     </div>
                                     <div class="mb-2">
                                         <label>RAM</label>
-                                        <input type="text" class="form-control" x-model="assetForm.ram">
+                                        <input type="text" class="form-control" x-model="assetForm.ram" required>
                                     </div>
                                     <div class="mb-2">
                                         <label>HDD</label>
-                                        <input type="text" class="form-control" x-model="assetForm.hdd">
+                                        <input type="text" class="form-control" x-model="assetForm.hdd" required>
                                     </div>
                                     <div class="mb-2">
                                         <label>OS</label>
-                                        <input type="text" class="form-control" x-model="assetForm.os">
+                                        <input type="text" class="form-control" x-model="assetForm.os" required>
                                     </div>
                                 </div>
                             </template>
+
 
                             <!-- Foto -->
                             <div class="mb-2">

@@ -316,8 +316,10 @@ function reminderApp() {
         formData.append("username", this.assetForm.username);
         formData.append("brand", this.assetForm.brand);
 
-        // Hanya kirim jika bukan printer
-        if (this.assetForm.nameCategory.toLowerCase() !== "Printer") {
+        const type = this.assetForm.nameCategory?.toLowerCase();
+        const needsSpec = ["laptop", "komputer"].includes(type);
+
+        if (needsSpec) {
           formData.append("processor", this.assetForm.processor);
           formData.append("ram", this.assetForm.ram);
           formData.append("hdd", this.assetForm.hdd);

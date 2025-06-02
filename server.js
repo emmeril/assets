@@ -370,17 +370,26 @@ app.post(
       os,
     } = req.body;
 
-    if (
-      !nameCategory ||
-      !description ||
-      !serialNumber ||
-      !quantity ||
-      !price ||
-      !purchaseDate ||
-      !division ||
-      !username ||
-      !brand
-    ) {
+    const requiredFields = [
+      nameCategory,
+      description,
+      serialNumber,
+      quantity,
+      price,
+      purchaseDate,
+      division,
+      username,
+      brand,
+    ];
+
+    const type = nameCategory.toLowerCase();
+    const needsSpec = ["laptop", "komputer"].includes(type);
+
+    if (needsSpec) {
+      requiredFields.push(processor, ram, hdd, os);
+    }
+
+    if (requiredFields.some((field) => !field)) {
       return res.status(400).json({ message: "Semua field wajib diisi." });
     }
 
@@ -395,7 +404,8 @@ app.post(
 
       // ✅ Tambah kode unik berdasarkan kategori
       const kodeAsset = generateAssetCode(assets, nameCategory);
-      const isPrinter = nameCategory.toLowerCase() === "printer";
+      const type = nameCategory.toLowerCase();
+      const needsSpec = ["laptop", "komputer"].includes(type);
 
       const asset = {
         id,
@@ -410,10 +420,10 @@ app.post(
         username,
         brand,
         photo,
-        processor: isPrinter ? undefined : processor,
-        ram: isPrinter ? undefined : ram,
-        hdd: isPrinter ? undefined : hdd,
-        os: isPrinter ? undefined : os,
+        processor: needsSpec ? processor : undefined,
+        ram: needsSpec ? ram : undefined,
+        hdd: needsSpec ? hdd : undefined,
+        os: needsSpec ? os : undefined,
       };
 
       assets.push(asset);
@@ -497,18 +507,27 @@ app.put(
       os,
     } = req.body;
 
-    if (
-      !nameCategory ||
-      !description ||
-      !serialNumber ||
-      !quantity ||
-      !price ||
-      !purchaseDate ||
-      !division ||
-      !username ||
-      !brand
-    ) {
-      return res.status(400).json({ message: "Semua field wajib diisi!" });
+    const requiredFields = [
+      nameCategory,
+      description,
+      serialNumber,
+      quantity,
+      price,
+      purchaseDate,
+      division,
+      username,
+      brand,
+    ];
+
+    const type = nameCategory.toLowerCase();
+    const needsSpec = ["laptop", "komputer"].includes(type);
+
+    if (needsSpec) {
+      requiredFields.push(processor, ram, hdd, os);
+    }
+
+    if (requiredFields.some((field) => !field)) {
+      return res.status(400).json({ message: "Semua field wajib diisi." });
     }
 
     const assetsFilePath = path.join(__dirname, "database", "assets.json");
@@ -524,11 +543,12 @@ app.put(
       }
 
       const oldAsset = assets[assetIndex];
-      const isPrinter = nameCategory.toLowerCase() === "printer";
+      const type = nameCategory.toLowerCase();
+      const needsSpec = ["laptop", "komputer"].includes(type);
 
       const updatedAsset = {
         id,
-        kodeAsset: oldAsset.kodeAsset, // 👈 TETAPKAN kode lama
+        kodeAsset: oldAsset.kodeAsset,
         nameCategory,
         description,
         serialNumber,
@@ -539,10 +559,10 @@ app.put(
         username,
         brand,
         photo: req.file ? req.file.filename : oldAsset.photo,
-        processor: isPrinter ? undefined : processor,
-        ram: isPrinter ? undefined : ram,
-        hdd: isPrinter ? undefined : hdd,
-        os: isPrinter ? undefined : os,
+        processor: needsSpec ? processor : undefined,
+        ram: needsSpec ? ram : undefined,
+        hdd: needsSpec ? hdd : undefined,
+        os: needsSpec ? os : undefined,
       };
 
       assets[assetIndex] = updatedAsset;
