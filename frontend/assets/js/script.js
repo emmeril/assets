@@ -238,6 +238,10 @@ function reminderApp() {
       username: "",
     },
 
+    perPageOptions: [10, 25, 50, 100],
+    perPage: 10,
+    currentPage: 1,
+
     async init() {
       try {
         await this.fetchCategories();
@@ -563,6 +567,21 @@ function reminderApp() {
       });
     },
 
+    get paginatedAssets() {
+      const start = (this.currentPage - 1) * this.perPage;
+      const end = start + this.perPage;
+
+      // Jika "Lihat Semua"
+      if (this.perPage === -1) return this.filteredAssets;
+
+      return this.filteredAssets.slice(start, end);
+    },
+
+    get totalPages() {
+      if (this.perPage === -1) return 1;
+      return Math.ceil(this.filteredAssets.length / this.perPage) || 1;
+    },
+    
     resetCategoryForm() {
       this.categoryForm = {
         id: null,
