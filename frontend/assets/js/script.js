@@ -593,6 +593,38 @@ function reminderApp() {
         deep: true,
       },
     },
+    openScanModal() {
+      const modal = new bootstrap.Modal(
+        document.getElementById("barcodeScannerModal")
+      );
+      modal.show();
+
+      const selectedDeviceId = null;
+      const codeReader = new ZXing.BrowserMultiFormatReader();
+      const videoElement = document.getElementById("scanner-video");
+
+      codeReader
+        .listVideoInputDevices()
+        .then((videoInputDevices) => {
+          const deviceId = videoInputDevices[0]?.deviceId;
+
+          codeReader.decodeFromVideoDevice(
+            deviceId,
+            videoElement,
+            (result, err) => {
+              if (result) {
+                this.searchQuery = result.getText();
+                codeReader.reset();
+                modal.hide();
+              }
+            }
+          );
+        })
+        .catch((err) => {
+          console.error("Camera error", err);
+        });
+    },
+    
     resetCategoryForm() {
       this.categoryForm = {
         id: null,
