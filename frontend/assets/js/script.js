@@ -624,6 +624,56 @@ function reminderApp() {
           console.error("Camera error", err);
         });
     },
+
+    printLabel(item) {
+      const printWindow = window.open("", "_blank");
+      const barcodeURL = `https://barcode.tec-it.com/barcode.ashx?data=${item.kodeAsset}&code=MobileQRCode&eclevel=L`;
+
+      const labelHTML = `
+    <html>
+      <head>
+        <title>Label Aset</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 10px;
+          }
+          .label {
+            border: 1px dashed #333;
+            padding: 10px;
+            width: 250px;
+            margin: auto;
+            font-size: 14px;
+          }
+          .label img {
+            width: 120px;
+            margin-bottom: 5px;
+          }
+          .label div {
+            margin-bottom: 4px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="label">
+          <img src="${barcodeURL}" alt="QR">
+          <div><strong>Kode:</strong> ${item.kodeAsset}</div>
+          <div><strong>Tanggal:</strong> ${item.purchaseDate}</div>
+          <div><strong>Serial:</strong> ${item.serialNumber}</div>
+        </div>
+        <script>
+          window.onload = function() {
+            window.print();
+          }
+        </script>
+      </body>
+    </html>
+  `;
+
+      printWindow.document.write(labelHTML);
+      printWindow.document.close();
+    },
     
     resetCategoryForm() {
       this.categoryForm = {
