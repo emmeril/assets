@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "id": 1748826036843,
+    "kodeAsset": "PRI-0001",
+    "nameCategory": "Printer",
+    "description": "-",
+    "serialNumber": "-",
+    "quantity": 1,
+    "price": 10000,
+    "purchaseDate": "2025-06-02",
+    "division": "IT",
+    "username": "Hafri",
+    "brand": "Asus",
+    "photo": "1748826036814.jpeg"
+  },
+  {
+    "id": 1748826887055,
+    "kodeAsset": "OTH-0001",
+    "nameCategory": "Other",
+    "description": "-",
+    "serialNumber": "-",
+    "quantity": 1,
+    "price": 1000,
+    "purchaseDate": "2025-06-02",
+    "division": "HRD",
+    "username": "Iki",
+    "brand": "Lenovo",
+    "photo": "1748826887039.jpeg"
+  }
+]

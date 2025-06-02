@@ -9,6 +9,14 @@ const fs = require("fs").promises;
 const path = require("path");
 const app = express();
 const multer = require("multer");
+const XLSX = require("xlsx");
+const uploadExcel = multer({ dest: "uploads/" });
+
+
+
+
+
+
 
 // app.use(
 //   cors({
@@ -602,6 +610,45 @@ app.delete("/delete-asset/:id", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Error deleting asset:", error);
     res.status(500).json({ message: "Failed to delete asset" });
+  }
+});
+
+app.get("/export-assets", authenticateToken, async (req, res) => {
+  const filePath = path.join(__dirname, "database", "assets.json");
+  try {
+    const jsonData = JSON.parse(await fs.readFile(filePath, "utf-8") || "[]");
+
+    const worksheet = XLSX.utils.json_to_sheet(jsonData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Assets");
+
+    const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+
+    res.setHeader("Content-Disposition", "attachment; filename=assets.xlsx");
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.send(buffer);
+  } catch (error) {
+    console.error("Export error:", error);
+    res.status(500).json({ message: "Gagal ekspor data aset." });
+  }
+});
+
+app.post("/import-assets", authenticateToken, uploadExcel.single("file"), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "File tidak ditemukan." });
+  }
+
+  try {
+    const workbook = XLSX.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    const filePath = path.join(__dirname, "database", "assets.json");
+    await fs.writeFile(filePath, JSON.stringify(jsonData, null, 2));
+    res.json({ message: "Data berhasil diimpor!" });
+  } catch (err) {
+    console.error("Import error:", err);
+    res.status(500).json({ message: "Gagal impor data." });
   }
 });
 

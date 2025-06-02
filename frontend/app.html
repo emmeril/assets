@@ -177,6 +177,46 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Daftar Aset</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <button class="btn btn-success btn-sm" @click="exportExcel">Export Excel</button>
+
+                            <form @submit.prevent="importExcel" enctype="multipart/form-data" class="d-flex gap-2">
+                                <input type="file" accept=".xlsx" @change="handleExcelFile"
+                                    class="form-control form-control-sm" />
+                                <button class="btn btn-primary btn-sm" type="submit">Import Excel</button>
+                            </form>
+                        </div>
+                        <input type="text" class="form-control" placeholder="Cari aset..." x-model="searchQuery">
+                        <div class="mt-2 mb-3">
+                            <label for="filterCategory">Filter Kategori:</label>
+                            <select id="filterCategory" class="form-select" x-model="selectedCategory">
+                                <option value="">Semua Kategori</option>
+                                <template x-for="cat in allCategories" :key="cat.id">
+                                    <option :value="cat.nameCategory" x-text="cat.nameCategory"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="mt-2 mb-3">
+                            <label for="filterKode">Filter Kode:</label>
+                            <input type="text" id="filterKode" class="form-control" x-model="filters.kodeAsset">
+                        </div>
+                        <div class="mt-2 mb-3">
+                            <label for="filterBrand">Filter Brand:</label>
+                            <input type="text" id="filterBrand" class="form-control" x-model="filters.brand">
+                        </div>  
+                        <div class="mt-2 mb-3">
+                            <label for="filterUser">Filter User:</label>
+                            <input type="text" id="filterUser" class="form-control" x-model="filters.username">
+                        </div>
+                        <div class="mt-2 mb-3">
+                            <label for="filterPurchaseDate">Filter Tanggal Pembelian:</label>
+                            <input type="date" id="filterPurchaseDate" class="form-control" x-model="filters.purchaseDate">
+                        </div>
+                        <div class="mt-2 mb-3">
+                            <label for="filterDivision">Filter Divisi:</label>
+                            <input type="text" id="filterDivision" class="form-control" x-model="filters.division">
+                        </div>
+                        
                         <table class="table table-bordered table-sm align-middle">
                             <thead class="table-light">
                                 <tr>
@@ -197,7 +237,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <template x-for="(item, i) in assets" :key="item.id">
+                                <template x-for="(item, i) in filteredAssets" :key="item.id">
                                     <tr>
                                         <td x-text="i + 1"></td>
                                         <td x-text="item.nameCategory"></td>

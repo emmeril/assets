@@ -227,6 +227,17 @@ function reminderApp() {
       nameCategory: "",
     },
 
+    searchQuery: "",
+    filters: {
+      nameCategory: "",
+      kodeAsset: "",
+      brand: "",
+      serialNumber: "",
+      purchaseDate: "",
+      division: "",
+      username: "",
+    },
+
     async init() {
       try {
         await this.fetchCategories();
@@ -430,6 +441,126 @@ function reminderApp() {
         showToast("Kategori dihapus", "success");
         await this.fetchCategories();
       }
+    },
+
+    excelFile: null,
+
+    handleExcelFile(event) {
+      this.excelFile = event.target.files[0];
+    },
+
+    async importExcel() {
+      if (!this.excelFile)
+        return showToast("Pilih file terlebih dahulu.", "danger");
+
+      const formData = new FormData();
+      formData.append("file", this.excelFile);
+
+      const token = localStorage.getItem("token");
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/import-assets`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        showToast("Impor berhasil!", "success");
+        await this.fetchAssets();
+      } catch (err) {
+        showToast(err.message, "danger");
+      }
+    },
+
+    async exportExcel() {
+      const token = localStorage.getItem("token");
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/export-assets`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "assets.xlsx";
+        link.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        showToast("Gagal mengekspor data!", "danger");
+      }
+    },
+
+    get filteredAssets() {
+      return this.assets.filter((asset) => {
+        const query = this.searchQuery.toLowerCase();
+
+        // Filter berdasarkan input spesifik
+        if (
+          this.filters.nameCategory &&
+          asset.nameCategory !== this.filters.nameCategory
+        )
+          return false;
+        if (
+          this.filters.kodeAsset &&
+          !asset.kodeAsset
+            ?.toLowerCase()
+            .includes(this.filters.kodeAsset.toLowerCase())
+        )
+          return false;
+        if (
+          this.filters.brand &&
+          !asset.brand?.toLowerCase().includes(this.filters.brand.toLowerCase())
+        )
+          return false;
+        if (
+          this.filters.serialNumber &&
+          !asset.serialNumber
+            ?.toLowerCase()
+            .includes(this.filters.serialNumber.toLowerCase())
+        )
+          return false;
+        if (
+          this.filters.purchaseDate &&
+          asset.purchaseDate !== this.filters.purchaseDate
+        )
+          return false;
+        if (
+          this.filters.division &&
+          !asset.division
+            ?.toLowerCase()
+            .includes(this.filters.division.toLowerCase())
+        )
+          return false;
+        if (
+          this.filters.username &&
+          !asset.username
+            ?.toLowerCase()
+            .includes(this.filters.username.toLowerCase())
+        )
+          return false;
+
+        // Pencarian global
+        if (query) {
+          const haystack = [
+            asset.nameCategory,
+            asset.kodeAsset,
+            asset.brand,
+            asset.serialNumber,
+            asset.purchaseDate,
+            asset.division,
+            asset.username,
+          ]
+            .join(" ")
+            .toLowerCase();
+          return haystack.includes(query);
+        }
+
+        return true;
+      });
     },
 
     resetCategoryForm() {
