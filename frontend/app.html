@@ -186,37 +186,61 @@
                                 <button class="btn btn-primary btn-sm" type="submit">Import Excel</button>
                             </form>
                         </div>
-                        <input type="text" class="form-control" placeholder="Cari aset..." x-model="searchQuery">
-                        <div class="mt-2 mb-3">
-                            <label for="filterCategory">Filter Kategori:</label>
-                            <select id="filterCategory" class="form-select" x-model="selectedCategory">
-                                <option value="">Semua Kategori</option>
-                                <template x-for="cat in allCategories" :key="cat.id">
-                                    <option :value="cat.nameCategory" x-text="cat.nameCategory"></option>
-                                </template>
-                            </select>
-                        </div>
-                        <div class="mt-2 mb-3">
-                            <label for="filterKode">Filter Kode:</label>
-                            <input type="text" id="filterKode" class="form-control" x-model="filters.kodeAsset">
-                        </div>
-                        <div class="mt-2 mb-3">
-                            <label for="filterBrand">Filter Brand:</label>
-                            <input type="text" id="filterBrand" class="form-control" x-model="filters.brand">
-                        </div>
-                        <div class="mt-2 mb-3">
-                            <label for="filterUser">Filter User:</label>
-                            <input type="text" id="filterUser" class="form-control" x-model="filters.username">
-                        </div>
-                        <div class="mt-2 mb-3">
-                            <label for="filterPurchaseDate">Filter Tanggal Pembelian:</label>
-                            <input type="date" id="filterPurchaseDate" class="form-control"
-                                x-model="filters.purchaseDate">
-                        </div>
-                        <div class="mt-2 mb-3">
-                            <label for="filterDivision">Filter Divisi:</label>
-                            <input type="text" id="filterDivision" class="form-control" x-model="filters.division">
-                        </div>
+                    <!-- 🔍 Pencarian Global -->
+<div class="mb-3">
+  <input type="text" class="form-control" placeholder="🔍 Cari aset..." x-model="searchQuery">
+</div>
+
+<!-- 🔎 Filter Spesifik -->
+<div class="row g-3 mb-4">
+  <!-- Kategori -->
+  <div class="col-md-6 col-lg-4">
+    <label for="filterCategory" class="form-label">Kategori</label>
+    <select id="filterCategory" class="form-select" x-model="filters.nameCategory">
+      <option value="">Semua Kategori</option>
+      <template x-for="cat in allCategories" :key="cat.id">
+        <option :value="cat.nameCategory" x-text="cat.nameCategory"></option>
+      </template>
+    </select>
+  </div>
+
+  <!-- Kode Aset -->
+  <div class="col-md-6 col-lg-4">
+    <label for="filterKode" class="form-label">Kode Aset</label>
+    <input type="text" id="filterKode" class="form-control" placeholder="Contoh: LPT-0001" x-model="filters.kodeAsset">
+  </div>
+
+  <!-- Brand -->
+  <div class="col-md-6 col-lg-4">
+    <label for="filterBrand" class="form-label">Brand</label>
+    <input type="text" id="filterBrand" class="form-control" placeholder="Contoh: Asus" x-model="filters.brand">
+  </div>
+
+  <!-- Serial Number -->
+  <div class="col-md-6 col-lg-4">
+    <label for="filterSerial" class="form-label">Serial Number</label>
+    <input type="text" id="filterSerial" class="form-control" placeholder="Contoh: SN12345" x-model="filters.serialNumber">
+  </div>
+
+  <!-- Tanggal Pembelian -->
+  <div class="col-md-6 col-lg-4">
+    <label for="filterPurchaseDate" class="form-label">Tanggal Pembelian</label>
+    <input type="date" id="filterPurchaseDate" class="form-control" x-model="filters.purchaseDate">
+  </div>
+
+  <!-- Divisi -->
+  <div class="col-md-6 col-lg-4">
+    <label for="filterDivision" class="form-label">Divisi</label>
+    <input type="text" id="filterDivision" class="form-control" placeholder="Contoh: IT" x-model="filters.division">
+  </div>
+
+  <!-- Pengguna -->
+  <div class="col-md-6 col-lg-4">
+    <label for="filterUser" class="form-label">Nama User</label>
+    <input type="text" id="filterUser" class="form-control" placeholder="Contoh: John Doe" x-model="filters.username">
+  </div>
+</div>
+
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <label>Tampilkan:</label>
                             <select class="form-select form-select-sm" style="width: auto" x-model="perPage">
