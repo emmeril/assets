@@ -202,6 +202,7 @@ function showToast(message, type = "success") {
 function reminderApp() {
   return {
     username: localStorage.getItem("username"),
+    activeTab: "aset",
     allCategories: [],
     assets: [],
     photoFile: null,
