@@ -384,14 +384,17 @@ function reminderApp() {
 
         await this.fetchAssets();
         this.resetAssetForm();
+        const modalEl = document.getElementById("assetModal");
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal?.hide();
       } catch (error) {
         showToast(error.message || "Gagal mengirim data", "danger");
       }
     },
-    
-    editAsset(asset) {
-      this.assetForm = { ...asset };
-    },
+
+    // editAsset(asset) {
+    //   this.assetForm = { ...asset };
+    // },
 
     async deleteAsset(id) {
       if (confirm("Yakin ingin menghapus aset ini?")) {
@@ -694,6 +697,18 @@ function reminderApp() {
       printWindow.document.close();
     },
 
+    openAssetModal(asset) {
+      if (asset) {
+        this.assetForm = { ...asset };
+      } else {
+        this.resetAssetForm();
+      }
+      console.log("Edit asset:", asset);
+
+      const modalEl = document.getElementById("assetModal");
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+    },
     resetCategoryForm() {
       this.categoryForm = {
         id: null,

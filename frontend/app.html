@@ -53,7 +53,7 @@
 </head>
 
 <body>
-    <div class="container-fluid p-3 p-md-5" x-data="reminderApp()" x-init="init()">
+    <div class="container p-3 p-md-5" x-data="reminderApp()" x-init="init()">
 
         <!-- Navbar -->
         <nav class="navbar navbar-expand-lg navbar-light px-3 rounded mb-4 bg-light shadow-sm">
@@ -65,7 +65,7 @@
         </nav>
 
         <!-- Kategori -->
-        <div class="row g-4">
+        <!-- <div class="row g-4">
             <div class="col-md-6">
                 <div class="card h-100">
                     <div class="card-body">
@@ -103,15 +103,17 @@
                     </div>
                 </div>
             </div>
-        </div>
-
+        </div> -->
         <!-- Form dan Daftar Aset -->
-        <div class="row g-4 mt-3">
-            <!-- Form Aset -->
-            <div class="col-lg-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Tambah / Edit Aset</h5>
+        <div class="modal fade" id="assetModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content p-3">
+                    <div class="modal-header">
+                        <h5 class="modal-title" x-text="assetForm.id ? 'Edit Aset' : 'Tambah Aset'"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- 👇 form seperti sebelumnya, tinggal dipindahkan ke sini -->
                         <form @submit.prevent="submitAssetForm" enctype="multipart/form-data">
                             <div class="mb-2">
                                 <label>Kategori</label>
@@ -206,194 +208,201 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <!-- Daftar Aset -->
+        <div class="container">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Daftar Aset</h5>
 
-            <!-- Daftar Aset -->
-            <div class="col-lg-8">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Daftar Aset</h5>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <button class="btn btn-success btn-sm" @click="exportExcel">Export Excel</button>
+                        <form @submit.prevent="importExcel" enctype="multipart/form-data" class="d-flex gap-2">
+                            <input type="file" accept=".xlsx" @change="handleExcelFile"
+                                class="form-control form-control-sm" />
+                            <button class="btn btn-primary btn-sm" type="submit">Import Excel</button>
+                        </form>
+                    </div>
 
-                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-                            <button class="btn btn-success btn-sm" @click="exportExcel">Export Excel</button>
-                            <form @submit.prevent="importExcel" enctype="multipart/form-data" class="d-flex gap-2">
-                                <input type="file" accept=".xlsx" @change="handleExcelFile"
-                                    class="form-control form-control-sm" />
-                                <button class="btn btn-primary btn-sm" type="submit">Import Excel</button>
-                            </form>
-                        </div>
-                        <div class="d-flex gap-2 mb-3">
-                            <button class="btn btn-outline-primary btn-sm" @click="openScanModal">📷 Scan
-                                Barcode</button>
-                        </div>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <button class="btn btn-outline-primary btn-sm" @click="openScanModal">📷 Scan
+                            Barcode</button>
+                        <button class="btn btn-primary d-flex gap-2" @click="openAssetModal(null)">
+                            <i class="fa fa-plus"></i> Tambah Aset
+                        </button>
+                    </div>
 
-                        <!-- Modal Kamera -->
-                        <div class="modal fade" id="barcodeScannerModal" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content p-3">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Scan Barcode</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <video id="scanner-video" width="100%" autoplay muted playsinline></video>
-                                        <p class="text-muted small mt-2">Arahkan barcode ke kamera.</p>
-                                    </div>
+                    <!-- Modal Kamera -->
+                    <div class="modal fade" id="barcodeScannerModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content p-3">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Scan Barcode</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <video id="scanner-video" width="100%" autoplay muted playsinline></video>
+                                    <p class="text-muted small mt-2">Arahkan barcode ke kamera.</p>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
 
-                        <input type="text" class="form-control mb-3" placeholder="🔍 Cari aset..."
-                            x-model="searchQuery" />
+                    <input type="text" class="form-control mb-3" placeholder="🔍 Cari aset..." x-model="searchQuery" />
 
-                        <!-- Filter -->
-                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mb-4">
-                            <div>
-                                <label>Kategori</label>
-                                <select class="form-select" x-model="filters.nameCategory">
-                                    <option value="">Semua</option>
-                                    <template x-for="cat in allCategories" :key="cat.id">
-                                        <option :value="cat.nameCategory" x-text="cat.nameCategory"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <div>
-                                <label>Kode Aset</label>
-                                <input class="form-control" x-model="filters.kodeAsset" />
-                            </div>
-                            <div>
-                                <label>Brand</label>
-                                <input class="form-control" x-model="filters.brand" />
-                            </div>
-                            <div>
-                                <label>Serial</label>
-                                <input class="form-control" x-model="filters.serialNumber" />
-                            </div>
-                            <div>
-                                <label>Tanggal</label>
-                                <input type="date" class="form-control" x-model="filters.purchaseDate" />
-                            </div>
-                            <div>
-                                <label>Divisi</label>
-                                <input class="form-control" x-model="filters.division" />
-                            </div>
-                            <div>
-                                <label>Nama User</label>
-                                <input class="form-control" x-model="filters.username" />
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <label>Tampilkan:</label>
-                            <select class="form-select form-select-sm" style="width: auto" x-model.number="perPage">
-                                <template x-for="opt in perPageOptions" :key="opt">
-                                    <option :value="opt" x-text="opt"></option>
+                    <!-- Filter -->
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mb-4">
+                        <div>
+                            <label>Kategori</label>
+                            <select class="form-select" x-model="filters.nameCategory">
+                                <option value="">Semua</option>
+                                <template x-for="cat in allCategories" :key="cat.id">
+                                    <option :value="cat.nameCategory" x-text="cat.nameCategory"></option>
                                 </template>
-                                <option :value="-1">Lihat Semua</option>
                             </select>
                         </div>
-
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-sm align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Kategori</th>
-                                        <th>Kode</th>
-                                        <th>Barcode</th>
-                                        <th>Brand</th>
-                                        <th>Deskripsi</th>
-                                        <th>Serial</th>
-                                        <th>Tanggal</th>
-                                        <th>Divisi</th>
-                                        <th>User</th>
-                                        <th>Qty</th>
-                                        <th>Harga</th>
-                                        <th>Spesifikasi</th>
-                                        <th>Foto</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <template x-for="(item, i) in paginatedAssets" :key="item.id">
-                                        <tr>
-                                            <td x-text="i + 1"></td>
-                                            <td x-text="item.nameCategory"></td>
-                                            <td x-text="item.kodeAsset"></td>
-                                            <td>
-                                                <div style="text-align: center;">
-                                                    <img :src="`https://barcode.tec-it.com/barcode.ashx?data=${item.kodeAsset}&code=MobileQRCode&eclevel=L`"
-                                                        alt="QR" style="width: 60px; height: 60px;" />
-                                                </div>
-                                            </td>
-                                            <td x-text="item.brand"></td>
-                                            <td x-text="item.description"></td>
-                                            <td x-text="item.serialNumber"></td>
-                                            <td x-text="item.purchaseDate"></td>
-                                            <td x-text="item.division"></td>
-                                            <td x-text="item.username"></td>
-                                            <td x-text="item.quantity"></td>
-                                            <td x-text="item.price.toLocaleString()"></td>
-                                            <td>
-                                                <template x-if="['printer'].includes(item.nameCategory.toLowerCase())">
-                                                    <span class="text-muted">-</span>
-                                                </template>
-                                                <template x-if="!['printer'].includes(item.nameCategory.toLowerCase())">
-                                                    <div style="font-size: 0.85em">
-                                                        <div><strong>CPU:</strong> <span
-                                                                x-text="item.processor || '-'"></span></div>
-                                                        <div><strong>RAM:</strong> <span
-                                                                x-text="item.ram || '-'"></span></div>
-                                                        <div><strong>HDD:</strong> <span
-                                                                x-text="item.hdd || '-'"></span></div>
-                                                        <div><strong>OS:</strong> <span x-text="item.os || '-'"></span>
-                                                        </div>
-                                                    </div>
-                                                </template>
-                                            </td>
-                                            <td>
-                                                <img crossorigin="anonymous"
-                                                    :src="`${API_BASE_URL}/uploads/${item.photo}`" alt="Foto"
-                                                    style="width: 60px; object-fit: cover" x-show="item.photo" />
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-warning mb-1"
-                                                    @click="editAsset(item)">Edit</button>
-                                                <button class="btn btn-sm btn-danger"
-                                                    @click="deleteAsset(item.id)">Hapus</button>
-                                                <button class="btn btn-sm btn-secondary mb-1"
-                                                    @click="printLabel(item)">🖨️ Label</button>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
+                        <div>
+                            <label>Kode Aset</label>
+                            <input class="form-control" x-model="filters.kodeAsset" />
                         </div>
-
-                        <!-- Pagination -->
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <p class="text-muted small">
-                                Menampilkan <span x-text="paginatedAssets.length"></span>
-                                dari <span x-text="filteredAssets.length"></span> hasil
-                            </p>
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-secondary" :disabled="currentPage === 1"
-                                    @click="currentPage--">
-                                    &laquo;
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary" :disabled="currentPage === totalPages"
-                                    @click="currentPage++">
-                                    &raquo;
-                                </button>
-                            </div>
+                        <div>
+                            <label>Brand</label>
+                            <input class="form-control" x-model="filters.brand" />
                         </div>
-
+                        <div>
+                            <label>Serial</label>
+                            <input class="form-control" x-model="filters.serialNumber" />
+                        </div>
+                        <div>
+                            <label>Tanggal</label>
+                            <input type="date" class="form-control" x-model="filters.purchaseDate" />
+                        </div>
+                        <div>
+                            <label>Divisi</label>
+                            <input class="form-control" x-model="filters.division" />
+                        </div>
+                        <div>
+                            <label>Nama User</label>
+                            <input class="form-control" x-model="filters.username" />
+                        </div>
                     </div>
+
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <label>Tampilkan:</label>
+                        <select class="form-select form-select-sm" style="width: auto" x-model.number="perPage">
+                            <template x-for="opt in perPageOptions" :key="opt">
+                                <option :value="opt" x-text="opt"></option>
+                            </template>
+                            <option :value="-1">Lihat Semua</option>
+                        </select>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Kategori</th>
+                                    <th>Kode</th>
+                                    <th>Barcode</th>
+                                    <th>Brand</th>
+                                    <th>Deskripsi</th>
+                                    <th>Serial</th>
+                                    <th>Tanggal</th>
+                                    <th>Divisi</th>
+                                    <th>User</th>
+                                    <th>Qty</th>
+                                    <th>Harga</th>
+                                    <th>Spesifikasi</th>
+                                    <th>Foto</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="(item, i) in paginatedAssets" :key="item.id">
+                                    <tr>
+                                        <td x-text="i + 1"></td>
+                                        <td x-text="item.nameCategory"></td>
+                                        <td x-text="item.kodeAsset"></td>
+                                        <td>
+                                            <div style="text-align: center;">
+                                                <img :src="`https://barcode.tec-it.com/barcode.ashx?data=${item.kodeAsset}&code=MobileQRCode&eclevel=L`"
+                                                    alt="QR" style="width: 60px; height: 60px;" />
+                                            </div>
+                                        </td>
+                                        <td x-text="item.brand"></td>
+                                        <td x-text="item.description"></td>
+                                        <td x-text="item.serialNumber"></td>
+                                        <td x-text="item.purchaseDate"></td>
+                                        <td x-text="item.division"></td>
+                                        <td x-text="item.username"></td>
+                                        <td x-text="item.quantity"></td>
+                                        <td x-text="item.price.toLocaleString()"></td>
+                                        <td>
+                                            <template x-if="['printer'].includes(item.nameCategory.toLowerCase())">
+                                                <span class="text-muted">-</span>
+                                            </template>
+                                            <template x-if="!['printer'].includes(item.nameCategory.toLowerCase())">
+                                                <div style="font-size: 0.85em">
+                                                    <div><strong>CPU:</strong> <span
+                                                            x-text="item.processor || '-'"></span>
+                                                    </div>
+                                                    <div><strong>RAM:</strong> <span x-text="item.ram || '-'"></span>
+                                                    </div>
+                                                    <div><strong>HDD:</strong> <span x-text="item.hdd || '-'"></span>
+                                                    </div>
+                                                    <div><strong>OS:</strong> <span x-text="item.os || '-'"></span>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </td>
+                                        <td>
+                                            <img crossorigin="anonymous" :src="`${API_BASE_URL}/uploads/${item.photo}`"
+                                                alt="Foto" style="width: 60px; object-fit: cover" x-show="item.photo" />
+                                        </td>
+                                        <td>
+
+                                            <button class="btn btn-sm btn-warning mb-1" @click="openAssetModal(item)"><i
+                                                    class="fa-solid fa-pen-to-square"></i></button>
+                                            <button class="btn btn-sm btn-danger mb-1" @click="deleteAsset(item.id)"><i
+                                                    class="fa-solid fa-trash"></i></button>
+                                            <button class="btn btn-sm btn-secondary " @click="printLabel(item)"><i
+                                                    class="fa-solid fa-tag"></i></button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <p class="text-muted small">
+                            Menampilkan <span x-text="paginatedAssets.length"></span>
+                            dari <span x-text="filteredAssets.length"></span> hasil
+                        </p>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary" :disabled="currentPage === 1"
+                                @click="currentPage--">
+                                &laquo;
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" :disabled="currentPage === totalPages"
+                                @click="currentPage++">
+                                &raquo;
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
+
     </div>
 
+
+
+    <!-- Toast Notification -->
     <div id="toast" class="toast position-fixed bottom-0 end-0 m-3"></div>
 
     <script src="./assets/js/script.js"></script>
