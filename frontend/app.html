@@ -53,6 +53,34 @@
 </head>
 
 <body>
+
+     <nav id="sidebar" class="active">
+            <div class="custom-menu">
+                <button type="button" id="sidebarCollapse" class="btn btn-primary">
+                    <i class="fa fa-bars"></i>
+                    <span class="sr-only">Toggle Menu</span>
+                </button>
+            </div>
+            <div class="p-4">
+                <h1 class="logo">Menu</h1>
+                <ul class="list-unstyled components mb-5">
+                    <li>
+                        <a class="text-decoration-none" href="https://emmeril-hotspot.vercel.app/monitor-ap"><span
+                                class="fa fa-wifi mr-3 "></span> Kategori</a>
+                    </li>
+                  
+
+                </ul>
+                <small
+                    class="text-center"><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                    Copyright © 2025
+                    Emmeril Hotspot
+                    <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                </small>
+
+
+            </div>
+        </nav>
     <div class="container p-3 p-md-5" x-data="reminderApp()" x-init="init()">
 
         <!-- Navbar -->
@@ -225,7 +253,7 @@
                     </div>
 
                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-                        <button class="btn btn-outline-primary btn-sm" @click="openScanModal">📷 Scan
+                        <button class="btn btn-outline-primary btn-sm" @click="openScanModal"><i class="fa-solid fa-camera"></i> Scan
                             Barcode</button>
                         <button class="btn btn-primary d-flex gap-2" @click="openAssetModal(null)">
                             <i class="fa fa-plus"></i> Tambah Aset
