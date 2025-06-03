@@ -278,5 +278,31 @@
     "username": "Hafri",
     "brand": "Asus",
     "photo": "1748826036814.jpeg"
+  },
+  {
+    "id": 1748913173869,
+    "kodeAsset": "PRI-0021",
+    "nameCategory": "Printer",
+    "description": "d",
+    "serialNumber": "d",
+    "quantity": 1,
+    "price": 12222,
+    "purchaseDate": "2025-06-03",
+    "division": "d",
+    "username": "d",
+    "brand": "d"
+  },
+  {
+    "id": 1748913623420,
+    "kodeAsset": "asem-078",
+    "nameCategory": "Printer",
+    "description": "dsf",
+    "serialNumber": "sdfsd",
+    "quantity": 1,
+    "price": 1000,
+    "purchaseDate": "2025-06-03",
+    "division": "dsf",
+    "username": "sdf",
+    "brand": "sdf"
   }
 ]

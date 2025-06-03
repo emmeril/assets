@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = "http://192.168.2.11:3000";
 const LOGIN_PAGE_URL = "index.html";
 const PROTECTED_PAGES = ["app.html"];
 
@@ -205,6 +205,8 @@ function reminderApp() {
     allCategories: [],
     assets: [],
     photoFile: null,
+    kodeAssetMode: "auto",
+
     assetForm: {
       id: null,
       nameCategory: "",
@@ -321,6 +323,7 @@ function reminderApp() {
         const isEdit = !!this.assetForm.id;
         const formData = new FormData();
 
+        // Isi field utama
         formData.append("nameCategory", this.assetForm.nameCategory);
         formData.append("description", this.assetForm.description);
         formData.append("serialNumber", this.assetForm.serialNumber);
@@ -331,9 +334,20 @@ function reminderApp() {
         formData.append("username", this.assetForm.username);
         formData.append("brand", this.assetForm.brand);
 
+        // Generate kodeAsset jika mode auto dan sedang menambah
+        if (this.kodeAssetMode === "auto" && !this.assetForm.id) {
+          const prefix =
+            this.assetForm.nameCategory?.slice(0, 3)?.toUpperCase() || "AST";
+          const random = Math.floor(1000 + Math.random() * 9000);
+          this.assetForm.kodeAsset = `${prefix}-${random}`;
+        }
+
+        // ⬅️ Tambahkan ke formData baik manual atau auto
+        formData.append("kodeAsset", this.assetForm.kodeAsset);
+
+        // Tambahkan spesifikasi jika kategori butuh
         const type = this.assetForm.nameCategory?.toLowerCase();
         const needsSpec = ["laptop", "komputer"].includes(type);
-
         if (needsSpec) {
           formData.append("processor", this.assetForm.processor);
           formData.append("ram", this.assetForm.ram);
@@ -341,8 +355,12 @@ function reminderApp() {
           formData.append("os", this.assetForm.os);
         }
 
-        if (this.photoFile) formData.append("photo", this.photoFile);
+        // Tambahkan file foto jika ada
+        if (this.photoFile) {
+          formData.append("photo", this.photoFile);
+        }
 
+        // Request ke server
         const token = localStorage.getItem("token");
         const url = isEdit
           ? `${API_BASE_URL}/update-asset/${this.assetForm.id}`
@@ -358,6 +376,7 @@ function reminderApp() {
 
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
+
         showToast(
           data.message || (isEdit ? "Aset diperbarui" : "Aset ditambahkan"),
           "success"
@@ -366,10 +385,10 @@ function reminderApp() {
         await this.fetchAssets();
         this.resetAssetForm();
       } catch (error) {
-        showToast(error.message, "danger");
+        showToast(error.message || "Gagal mengirim data", "danger");
       }
     },
-
+    
     editAsset(asset) {
       this.assetForm = { ...asset };
     },
@@ -674,7 +693,7 @@ function reminderApp() {
       printWindow.document.write(labelHTML);
       printWindow.document.close();
     },
-    
+
     resetCategoryForm() {
       this.categoryForm = {
         id: null,

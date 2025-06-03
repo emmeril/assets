@@ -123,6 +123,23 @@
                                 </select>
                             </div>
 
+                            <div class="mb-2">
+                                <label class="form-label">Kode Aset</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" value="auto" x-model="kodeAssetMode"
+                                        id="autoMode">
+                                    <label class="form-check-label" for="autoMode">Generate Otomatis</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" value="manual" x-model="kodeAssetMode"
+                                        id="manualMode">
+                                    <label class="form-check-label" for="manualMode">Isi Manual</label>
+                                </div>
+                                <input type="text" class="form-control" placeholder="Contoh: LPT-0001"
+                                    :disabled="kodeAssetMode === 'auto'" x-model="assetForm.kodeAsset" required>
+                            </div>
+
+
                             <div class="mb-2"><label>Tanggal Pembelian</label>
                                 <input type="date" class="form-control" x-model="assetForm.purchaseDate" required>
                             </div>

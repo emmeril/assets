@@ -12,15 +12,9 @@ const multer = require("multer");
 const XLSX = require("xlsx");
 const uploadExcel = multer({ dest: "uploads/" });
 
-
-
-
-
-
-
 // app.use(
 //   cors({
-//     origin: ["http://38.47.176.155", "http://reminder.emmeril-hotspot.shop"],
+//     origin: ["http://192.168.2.11:3000", "http://192.168.2.11:5500"],
 //     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 //     allowedHeaders: ["Content-Type", "Authorization"],
 //     maxAge: 600,
@@ -154,6 +148,7 @@ const categorySchema = Joi.object({
 // Schema validasi menggunakan data Asset
 const assetSchema = Joi.object({
   nameCategory: Joi.string().required(),
+  kodeAsset: Joi.string().required(),
   description: Joi.string().required(),
   serialNumber: Joi.string().required(),
   quantity: Joi.number().min(1).required(),
@@ -364,6 +359,7 @@ app.post(
 
     const {
       nameCategory,
+      kodeAsset: submittedKodeAsset, // renamed to avoid conflict
       description,
       serialNumber,
       quantity,
@@ -378,6 +374,9 @@ app.post(
       os,
     } = req.body;
 
+    const type = nameCategory.toLowerCase();
+    const needsSpec = ["laptop", "komputer"].includes(type);
+
     const requiredFields = [
       nameCategory,
       description,
@@ -389,9 +388,6 @@ app.post(
       username,
       brand,
     ];
-
-    const type = nameCategory.toLowerCase();
-    const needsSpec = ["laptop", "komputer"].includes(type);
 
     if (needsSpec) {
       requiredFields.push(processor, ram, hdd, os);
@@ -410,14 +406,13 @@ app.post(
       const data = await fs.readFile(assetsFilePath, "utf-8");
       const assets = JSON.parse(data || "[]");
 
-      // ✅ Tambah kode unik berdasarkan kategori
-      const kodeAsset = generateAssetCode(assets, nameCategory);
-      const type = nameCategory.toLowerCase();
-      const needsSpec = ["laptop", "komputer"].includes(type);
+      // ✅ Gunakan kode dari frontend jika ada, atau generate otomatis
+      const finalKodeAsset =
+        submittedKodeAsset || generateAssetCode(assets, nameCategory);
 
       const asset = {
         id,
-        kodeAsset,
+        kodeAsset: finalKodeAsset,
         nameCategory,
         description,
         serialNumber,
@@ -501,6 +496,7 @@ app.put(
 
     const {
       nameCategory,
+      kodeAsset,
       description,
       serialNumber,
       quantity,
@@ -515,6 +511,9 @@ app.put(
       os,
     } = req.body;
 
+    const type = nameCategory.toLowerCase();
+    const needsSpec = ["laptop", "komputer"].includes(type);
+
     const requiredFields = [
       nameCategory,
       description,
@@ -526,9 +525,6 @@ app.put(
       username,
       brand,
     ];
-
-    const type = nameCategory.toLowerCase();
-    const needsSpec = ["laptop", "komputer"].includes(type);
 
     if (needsSpec) {
       requiredFields.push(processor, ram, hdd, os);
@@ -551,12 +547,11 @@ app.put(
       }
 
       const oldAsset = assets[assetIndex];
-      const type = nameCategory.toLowerCase();
-      const needsSpec = ["laptop", "komputer"].includes(type);
 
       const updatedAsset = {
         id,
-        kodeAsset: oldAsset.kodeAsset,
+        // Gunakan kode dari form jika dikirim, atau pertahankan yang lama
+        kodeAsset: kodeAsset || oldAsset.kodeAsset,
         nameCategory,
         description,
         serialNumber,
@@ -616,7 +611,7 @@ app.delete("/delete-asset/:id", authenticateToken, async (req, res) => {
 app.get("/export-assets", authenticateToken, async (req, res) => {
   const filePath = path.join(__dirname, "database", "assets.json");
   try {
-    const jsonData = JSON.parse(await fs.readFile(filePath, "utf-8") || "[]");
+    const jsonData = JSON.parse((await fs.readFile(filePath, "utf-8")) || "[]");
 
     const worksheet = XLSX.utils.json_to_sheet(jsonData);
     const workbook = XLSX.utils.book_new();
@@ -625,7 +620,10 @@ app.get("/export-assets", authenticateToken, async (req, res) => {
     const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
 
     res.setHeader("Content-Disposition", "attachment; filename=assets.xlsx");
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
     res.send(buffer);
   } catch (error) {
     console.error("Export error:", error);
@@ -633,24 +631,29 @@ app.get("/export-assets", authenticateToken, async (req, res) => {
   }
 });
 
-app.post("/import-assets", authenticateToken, uploadExcel.single("file"), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: "File tidak ditemukan." });
-  }
+app.post(
+  "/import-assets",
+  authenticateToken,
+  uploadExcel.single("file"),
+  async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "File tidak ditemukan." });
+    }
 
-  try {
-    const workbook = XLSX.readFile(req.file.path);
-    const sheetName = workbook.SheetNames[0];
-    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    try {
+      const workbook = XLSX.readFile(req.file.path);
+      const sheetName = workbook.SheetNames[0];
+      const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-    const filePath = path.join(__dirname, "database", "assets.json");
-    await fs.writeFile(filePath, JSON.stringify(jsonData, null, 2));
-    res.json({ message: "Data berhasil diimpor!" });
-  } catch (err) {
-    console.error("Import error:", err);
-    res.status(500).json({ message: "Gagal impor data." });
+      const filePath = path.join(__dirname, "database", "assets.json");
+      await fs.writeFile(filePath, JSON.stringify(jsonData, null, 2));
+      res.json({ message: "Data berhasil diimpor!" });
+    } catch (err) {
+      console.error("Import error:", err);
+      res.status(500).json({ message: "Gagal impor data." });
+    }
   }
-});
+);
 
 /**
  * Endpoint for user login
