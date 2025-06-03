@@ -147,7 +147,7 @@
     "processor": "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz   2.42 GHz",
     "ram": "8 GB",
     "hdd": "512 GB",
-    "os": "1th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz 2.42 GHz"
+    "os": "Windows 11 Home Single Language"
   },
   {
     "id": 1748923344961,
@@ -192,7 +192,7 @@
     "description": "AIO",
     "serialNumber": "C6A0C0BF-973C-4A15-8331-99F7F3D2B665",
     "quantity": 1,
-    "price": 0,
+    "price": 1,
     "purchaseDate": "2025-06-03",
     "division": "Production",
     "username": "Tiara",

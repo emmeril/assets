@@ -60,7 +60,7 @@
             <div class="container-fluid justify-content-between">
                 <span class="navbar-brand">Selamat datang, <i class="fa-solid fa-user"></i> <span
                         x-text="username"></span></span>
-                <button class="btn btn-sm btn-danger" @click="logout">Logout</button>
+                <button class="btn btn-sm btn-danger" @click="logout"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </nav>
 
@@ -216,11 +216,11 @@
                     <h5 class="card-title">Daftar Aset</h5>
 
                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-                        <button class="btn btn-success btn-sm" @click="exportExcel">Export Excel</button>
+                        <button class="btn btn-success btn-sm" @click="exportExcel"><i class="fa-solid fa-file-export"></i></button>
                         <form @submit.prevent="importExcel" enctype="multipart/form-data" class="d-flex gap-2">
                             <input type="file" accept=".xlsx" @change="handleExcelFile"
                                 class="form-control form-control-sm" />
-                            <button class="btn btn-primary btn-sm" type="submit">Import Excel</button>
+                            <button class="btn btn-primary btn-sm" type="submit"><i class="fa-solid fa-file-import"></i></button>
                         </form>
                     </div>
 
@@ -247,7 +247,6 @@
                             </div>
                         </div>
                     </div>
-
 
                     <input type="text" class="form-control mb-3" placeholder="🔍 Cari aset..." x-model="searchQuery" />
 
