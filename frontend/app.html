@@ -198,13 +198,13 @@
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-bordered table-sm align-middle">
-                                <thead class="table-light">
+                            <table class="table table-bordered table-sm align-middle text-nowrap">
+                                <thead class="table-light text-center">
                                     <tr>
                                         <th>#</th>
                                         <th>Kategori</th>
                                         <th>Kode</th>
-                                        <th>Barcode</th>
+                                        <th style="min-width: 80px;">Barcode</th>
                                         <th>Brand</th>
                                         <th>Deskripsi</th>
                                         <th>Serial</th>
@@ -214,7 +214,7 @@
                                         <th>Qty</th>
                                         <th>Harga</th>
                                         <th>Spesifikasi</th>
-                                        <th>Foto</th>
+                                        <th style="min-width: 70px;">Foto</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -224,11 +224,9 @@
                                             <td x-text="i + 1"></td>
                                             <td x-text="item.nameCategory"></td>
                                             <td x-text="item.kodeAsset"></td>
-                                            <td>
-                                                <div style="text-align: center;">
-                                                    <img :src="`https://barcode.tec-it.com/barcode.ashx?data=${item.kodeAsset}&code=MobileQRCode&eclevel=L`"
-                                                        alt="QR" style="width: 60px; height: 60px;" />
-                                                </div>
+                                            <td class="text-center">
+                                                <img :src="`https://barcode.tec-it.com/barcode.ashx?data=${item.kodeAsset}&code=MobileQRCode&eclevel=L`"
+                                                    alt="QR" style="width: 60px; height: 60px;" />
                                             </td>
                                             <td x-text="item.brand"></td>
                                             <td x-text="item.description"></td>
@@ -245,40 +243,40 @@
                                                 <template x-if="!['printer'].includes(item.nameCategory.toLowerCase())">
                                                     <div style="font-size: 0.85em">
                                                         <div><strong>CPU:</strong> <span
-                                                                x-text="item.processor || '-'"></span>
-                                                        </div>
+                                                                x-text="item.processor || '-'"></span></div>
                                                         <div><strong>RAM:</strong> <span
-                                                                x-text="item.ram || '-'"></span>
-                                                        </div>
+                                                                x-text="item.ram || '-'"></span></div>
                                                         <div><strong>HDD:</strong> <span
-                                                                x-text="item.hdd || '-'"></span>
-                                                        </div>
+                                                                x-text="item.hdd || '-'"></span></div>
                                                         <div><strong>OS:</strong> <span x-text="item.os || '-'"></span>
                                                         </div>
                                                     </div>
                                                 </template>
                                             </td>
-                                            <td>
+                                            <td class="text-center">
                                                 <img crossorigin="anonymous"
                                                     :src="`${API_BASE_URL}/uploads/${item.photo}`" alt="Foto"
                                                     style="width: 60px; object-fit: cover" x-show="item.photo" />
                                             </td>
-                                            <td>
-
+                                            <td class="text-center">
                                                 <button class="btn btn-sm btn-warning mb-1"
-                                                    @click="openAssetModal(item)"><i
-                                                        class="fa-solid fa-pen-to-square"></i></button>
+                                                    @click="openAssetModal(item)">
+                                                    <i class="fa-solid fa-pen-to-square"></i>
+                                                </button>
                                                 <button class="btn btn-sm btn-danger mb-1"
-                                                    @click="deleteAsset(item.id)"><i
-                                                        class="fa-solid fa-trash"></i></button>
-                                                <button class="btn btn-sm btn-secondary mb-1"
-                                                    @click="printLabel(item)"><i class="fa-solid fa-tag"></i></button>
+                                                    @click="deleteAsset(item.id)">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-secondary mb-1" @click="printLabel(item)">
+                                                    <i class="fa-solid fa-tag"></i>
+                                                </button>
                                             </td>
                                         </tr>
                                     </template>
                                 </tbody>
                             </table>
                         </div>
+
 
                         <!-- Pagination -->
                         <div class="d-flex justify-content-between align-items-center mt-3">
