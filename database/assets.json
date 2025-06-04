@@ -238,5 +238,22 @@
     "ram": "8 GB",
     "hdd": "512 GB",
     "os": "Windows 11 Home Single Language"
+  },
+  {
+    "id": 1749012910356,
+    "kodeAsset": "KOM-9153",
+    "nameCategory": "Komputer",
+    "description": "MINI PC NUC",
+    "serialNumber": "B282EC7E-16B5-49B2-8AC9-34AC345CA6A7",
+    "quantity": 1,
+    "price": 1,
+    "purchaseDate": "2025-06-04",
+    "division": "IT",
+    "username": "Hafri",
+    "brand": "ASUS",
+    "processor": "12th Gen Intel(R) Core(TM) i5-1240P   1.70 GHz",
+    "ram": "8 GB",
+    "hdd": "320 GB",
+    "os": "Windows 11 Pro"
   }
 ]
