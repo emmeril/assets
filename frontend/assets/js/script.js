@@ -561,38 +561,44 @@ function reminderApp() {
       },
     },
 
-    openScanModal() {
-      const modalEl = document.getElementById("barcodeScannerModal");
-      const modal = new bootstrap.Modal(modalEl);
-      modal.show();
+ openScanModal() {
+  const modalEl = document.getElementById("barcodeScannerModal");
+  const modal = new bootstrap.Modal(modalEl);
+  modal.show();
 
-      const videoElement = document.getElementById("scanner-video");
-      const codeReader = new ZXing.BrowserMultiFormatReader();
-      this.codeReader = codeReader;
+  const videoElement = document.getElementById("scanner-video");
+  const codeReader = new ZXing.BrowserMultiFormatReader();
+  this.codeReader = codeReader;
 
-      codeReader
-        .listVideoInputDevices()
-        .then((videoInputDevices) => {
-          const deviceId = videoInputDevices[0]?.deviceId;
+  codeReader
+    .listVideoInputDevices()
+    .then((videoInputDevices) => {
+      // ✅ Cari kamera belakang (label mengandung "back" atau "rear")
+      const backCamera = videoInputDevices.find(device =>
+        device.label.toLowerCase().includes("back") || device.label.toLowerCase().includes("rear")
+      );
 
-          codeReader.decodeFromVideoDevice(
-            deviceId,
-            videoElement,
-            (result, err) => {
-              if (result) {
-                this.searchQuery = result.getText();
+      // Fallback: pakai kamera terakhir jika tidak ketemu
+      const selectedDeviceId = backCamera?.deviceId || videoInputDevices[videoInputDevices.length - 1]?.deviceId;
 
-                this.stopScanModal(); // ⛔ stop scanner
-                const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                modalInstance?.hide(); // 🚪 tutup modal
-              }
-            }
-          );
-        })
-        .catch((err) => {
-          console.error("Camera error", err);
-        });
-    },
+      codeReader.decodeFromVideoDevice(
+        selectedDeviceId,
+        videoElement,
+        (result, err) => {
+          if (result) {
+            this.searchQuery = result.getText();
+            this.stopScanModal();
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            modalInstance?.hide();
+          }
+        }
+      );
+    })
+    .catch((err) => {
+      console.error("Camera error", err);
+    });
+}
+,
 
     stopScanModal() {
       if (this.codeReader) {
