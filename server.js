@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const https = require("https");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
@@ -14,13 +15,24 @@ const uploadExcel = multer({ dest: "uploads/" });
 
 // app.use(
 //   cors({
-//     origin: ["http://192.168.2.11:3000", "http://192.168.2.11:5500"],
+//     origin: ["https://192.168.2.11:3000", "http://192.168.2.11:5500", "https://192.168.2.11" , "http://192.168.2.11"],
 //     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 //     allowedHeaders: ["Content-Type", "Authorization"],
 //     maxAge: 600,
 //   })
 // );
-app.use(cors());
+// app.use(cors());
+async function startServer() {
+app.use(
+  cors({
+    origin: "https://192.168.2.11",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
+app.options("*", cors());
 app.use(express.json());
 app.use(helmet());
 app.use(compression());
@@ -30,6 +42,10 @@ app.use("/uploads", (req, res, next) => {
   next();
 });
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.get("/cors-test", (req, res) => {
+  res.json({ message: "CORS OK!" });
+});
 
 // Konfigurasi penyimpanan file upload
 const storage = multer.diskStorage({
@@ -702,10 +718,14 @@ app.use((req, res) => {
   res.status(404).json({ message: "Endpoint tidak ditemukan" });
 });
 
-// Menjalankan server
-app.listen(3000, () => {
-  console.log("Server berjalan di port 3000");
+
+const key = await fs.readFile("key.pem");
+const cert = await fs.readFile("cert.pem");
+https.createServer({ key, cert }, app).listen(3000, () => {
+  console.log("HTTPS server berjalan di https://localhost:3000");
 });
+}
+startServer();
 
 // Menginisialisasi klien WhatsApp
 // whatsappClient.initialize();

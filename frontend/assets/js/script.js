@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://192.168.2.11:3000";
+const API_BASE_URL = "https://192.168.2.11:3000";
 const LOGIN_PAGE_URL = "index.html";
 const PROTECTED_PAGES = ["app.html"];
 
@@ -207,6 +207,7 @@ function reminderApp() {
     assets: [],
     photoFile: null,
     kodeAssetMode: "auto",
+    codeReader: null,
 
     assetForm: {
       id: null,
@@ -262,63 +263,6 @@ function reminderApp() {
       this.assets = (await fetchAssets()) || [];
     },
 
-    // async submitAssetForm() {
-    //   try {
-    //     if (!this.assetForm.nameCategory || !this.assetForm.description || !this.assetForm.serialNumber) {
-    //       showToast("Semua kolom harus diisi!", "danger");
-    //       return;
-    //     }
-
-    //     if (this.assetForm.id) {
-    //       await updateAsset(this.assetForm.id, this.assetForm);
-    //       showToast("Aset diperbarui", "success");
-    //     } else {
-    //       await addAsset(this.assetForm);
-    //       showToast("Aset ditambahkan", "success");
-    //     }
-
-    //     await this.fetchAssets();
-    //     this.resetAssetForm();
-    //   } catch (error) {
-    //     showToast(error.message, "danger");
-    //   }
-    // },
-
-    // async submitAssetForm() {
-    //   try {
-    //     const isEdit = !!this.assetForm.id;
-
-    //     const payload = {
-    //       nameCategory: this.assetForm.nameCategory,
-    //       description: this.assetForm.description,
-    //       serialNumber: this.assetForm.serialNumber,
-    //       quantity: this.assetForm.quantity,
-    //       price: this.assetForm.price,
-    //     };
-
-    //     if (
-    //       !payload.nameCategory ||
-    //       !payload.description ||
-    //       !payload.serialNumber
-    //     ) {
-    //       showToast("Semua kolom harus diisi!", "danger");
-    //       return;
-    //     }
-
-    //     if (isEdit) {
-    //       await updateAsset(this.assetForm.id, payload);
-    //       showToast("Aset berhasil diperbarui", "success");
-    //     } else {
-    //       await addAsset(payload); // TANPA ID
-    //       showToast("Aset berhasil ditambahkan", "success");
-    //     }
-
-    //     await this.fetchAssets();
-    //     this.resetAssetForm();
-    //   } catch (error) {
-    //     showToast(error.message, "danger");
-    //   }
-    // },
     async submitAssetForm() {
       try {
         const isEdit = !!this.assetForm.id;
@@ -616,15 +560,15 @@ function reminderApp() {
         deep: true,
       },
     },
+
     openScanModal() {
-      const modal = new bootstrap.Modal(
-        document.getElementById("barcodeScannerModal")
-      );
+      const modalEl = document.getElementById("barcodeScannerModal");
+      const modal = new bootstrap.Modal(modalEl);
       modal.show();
 
-      const selectedDeviceId = null;
-      const codeReader = new ZXing.BrowserMultiFormatReader();
       const videoElement = document.getElementById("scanner-video");
+      const codeReader = new ZXing.BrowserMultiFormatReader();
+      this.codeReader = codeReader;
 
       codeReader
         .listVideoInputDevices()
@@ -637,8 +581,10 @@ function reminderApp() {
             (result, err) => {
               if (result) {
                 this.searchQuery = result.getText();
-                codeReader.reset();
-                modal.hide();
+
+                this.stopScanModal(); // ⛔ stop scanner
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                modalInstance?.hide(); // 🚪 tutup modal
               }
             }
           );
@@ -646,6 +592,13 @@ function reminderApp() {
         .catch((err) => {
           console.error("Camera error", err);
         });
+    },
+
+    stopScanModal() {
+      if (this.codeReader) {
+        this.codeReader.reset();
+        this.codeReader = null;
+      }
     },
 
     printLabel(item) {

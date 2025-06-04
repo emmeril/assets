@@ -65,23 +65,24 @@
         <div class="p-4">
             <h1 class="logo">Menu</h1>
             <ul class="list-unstyled components mb-5">
-                <li>
+                <li :class="{ 'active': activeTab === 'aset' }">
                     <a href="#" class="text-decoration-none" @click.prevent="activeTab = 'aset'">
                         <span class="fa fa-boxes me-2"></span> Aset
                     </a>
                 </li>
-                <li>
+                <li :class="{ 'active': activeTab === 'kategori' }">
                     <a href="#" class="text-decoration-none" @click.prevent="activeTab = 'kategori'">
                         <span class="fa fa-tags me-2"></span> Kategori
                     </a>
                 </li>
-
-                <li>
+                <li :class="{ 'active': activeTab === 'user' }">
                     <a href="#" class="text-decoration-none" @click.prevent="activeTab = 'user'">
                         <span class="fa fa-users me-2"></span> Pengguna
                     </a>
                 </li>
             </ul>
+
+
         </div>
     </nav>
 
@@ -89,7 +90,7 @@
 
     <div class="container p-3 p-md-5">
         <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-light px-3 rounded mb-4 bg-light shadow-sm">
+        <nav class="navbar navbar-expand-lg navbar-light px-3 rounded mb-4 bg-light shadow-sm sticky-top">
             <div class="container-fluid justify-content-between">
                 <span class="navbar-brand">Selamat datang, <i class="fa-solid fa-user"></i> <span
                         x-text="username"></span></span>
@@ -100,6 +101,10 @@
 
         <!-- Aset -->
         <div x-show="activeTab === 'aset'">
+            <div class="container">
+                <h2 class="mb-4">Manajemen Aset IT PT. Kaiti Global Indonesia</h2>
+            </div>
+
             <!-- Form dan daftar aset -->
             <!-- Daftar Aset -->
             <div class="container">
@@ -109,7 +114,7 @@
 
                         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                             <button class="btn btn-success btn-sm" @click="exportExcel"><i
-                                    class="fa-solid fa-file-export"></i></button>
+                                    class="fa-solid fa-file-export"></i> Export</button>
                             <form @submit.prevent="importExcel" enctype="multipart/form-data" class="d-flex gap-2">
                                 <input type="file" accept=".xlsx" @change="handleExcelFile"
                                     class="form-control form-control-sm" />
@@ -118,11 +123,11 @@
                             </form>
                         </div>
 
-                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
                             <button class="btn btn-outline-primary btn-sm" @click="openScanModal"><i
                                     class="fa-solid fa-camera"></i> Scan
                                 Barcode</button>
-                            <button class="btn btn-primary d-flex gap-2" @click="openAssetModal(null)">
+                            <button class="btn btn-primary btn-sm " @click="openAssetModal(null)">
                                 <i class="fa fa-plus"></i> Tambah Aset
                             </button>
                         </div>
@@ -133,7 +138,8 @@
                                 <div class="modal-content p-3">
                                     <div class="modal-header">
                                         <h5 class="modal-title">Scan Barcode</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            @click="stopScanModal"></button>
                                     </div>
                                     <div class="modal-body">
                                         <video id="scanner-video" width="100%" autoplay muted playsinline></video>
@@ -149,7 +155,7 @@
                         <!-- Filter -->
                         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mb-4">
                             <div>
-                                <label>Kategori</label>
+                                <label><i class="fa-solid fa-clipboard-list"></i> Kategori</label>
                                 <select class="form-select" x-model="filters.nameCategory">
                                     <option value="">Semua</option>
                                     <template x-for="cat in allCategories" :key="cat.id">
@@ -158,27 +164,27 @@
                                 </select>
                             </div>
                             <div>
-                                <label>Kode Aset</label>
+                                <label><i class="fa-solid fa-qrcode"></i> Kode Aset</label>
                                 <input class="form-control" x-model="filters.kodeAsset" />
                             </div>
                             <div>
-                                <label>Brand</label>
+                                <label><i class="fa-solid fa-tags"></i> Brand</label>
                                 <input class="form-control" x-model="filters.brand" />
                             </div>
                             <div>
-                                <label>Serial</label>
+                                <label><i class="fa-solid fa-barcode"></i> Serial</label>
                                 <input class="form-control" x-model="filters.serialNumber" />
                             </div>
                             <div>
-                                <label>Tanggal</label>
+                                <label><i class="fa-solid fa-calendar"></i> Tanggal</label>
                                 <input type="date" class="form-control" x-model="filters.purchaseDate" />
                             </div>
                             <div>
-                                <label>Divisi</label>
+                                <label><i class="fa-solid fa-user-group"></i> Divisi</label>
                                 <input class="form-control" x-model="filters.division" />
                             </div>
                             <div>
-                                <label>Nama User</label>
+                                <label><i class="fa-solid fa-user"></i> Nama User</label>
                                 <input class="form-control" x-model="filters.username" />
                             </div>
                         </div>
