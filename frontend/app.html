@@ -255,6 +255,15 @@
                                             <td x-text="item.quantity"></td>
                                             <td x-text="item.price.toLocaleString()"></td>
                                             <td>
+                                                <template x-if="['laptop', 'komputer'].includes(item.nameCategory.toLowerCase())">
+                                                    <div>
+                                                        <div><strong>Prosesor:</strong> <span
+                                                                x-text="item.processor"></span></div>
+                                                        <div><strong>RAM:</strong> <span x-text="item.ram"></span></div>
+                                                        <div><strong>HDD:</strong> <span x-text="item.hdd"></span></div>
+                                                        <div><strong>OS:</strong> <span x-text="item.os"></span></div>
+                                                    </div>
+                                                </template>
                                                 <template x-if="!['laptop', 'komputer'].includes(item.nameCategory.toLowerCase())">
                                                   <span class="text-muted">-</span>
                                                 </template>
