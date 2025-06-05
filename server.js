@@ -23,15 +23,15 @@ const uploadExcel = multer({ dest: "uploads/" });
 // );
 // app.use(cors());
 async function startServer() {
-app.use(
-  cors({
-    origin: "https://192.168.2.11",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
-
+// app.use(
+//   cors({
+//     origin: "https://192.168.2.11",
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//     credentials: true,
+//   })
+// );
+app.use(cors());
 app.options("*", cors());
 app.use(express.json());
 app.use(helmet());
@@ -721,7 +721,7 @@ app.use((req, res) => {
 
 const key = await fs.readFile("key.pem");
 const cert = await fs.readFile("cert.pem");
-https.createServer({ key, cert }, app).listen(3000, () => {
+https.createServer({ key, cert }, app).listen(3100, () => {
   console.log("HTTPS server berjalan di https://localhost:3000");
 });
 }

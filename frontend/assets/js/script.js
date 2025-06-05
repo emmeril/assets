@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://192.168.2.11:3000";
+const API_BASE_URL = "https://192.168.2.11:3100";
 const LOGIN_PAGE_URL = "index.html";
 const PROTECTED_PAGES = ["app.html"];
 
