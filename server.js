@@ -456,30 +456,30 @@ app.post(
 );
 
 // Endpoint untuk mendapatkan daftar aset berdasarkan kategori
-app.get(
-  "/get-assets-by-category/:category",
-  authenticateToken,
-  async (req, res) => {
-    const category = req.params.category;
+// app.get(
+//   "/get-assets-by-category/:category",
+//   authenticateToken,
+//   async (req, res) => {
+//     const category = req.params.category;
 
-    try {
-      // Load assets from file or database
-      const assetsFilePath = path.join(__dirname, "database", "assets.json");
-      const assetsData = await fs.readFile(assetsFilePath, "utf-8");
-      const assets = JSON.parse(assetsData || "[]");
+//     try {
+//       // Load assets from file or database
+//       const assetsFilePath = path.join(__dirname, "database", "assets.json");
+//       const assetsData = await fs.readFile(assetsFilePath, "utf-8");
+//       const assets = JSON.parse(assetsData || "[]");
 
-      // Filter assets by category
-      const filteredAssets = assets.filter(
-        (asset) => asset.nameCategory === category
-      );
+//       // Filter assets by category
+//       const filteredAssets = assets.filter(
+//         (asset) => asset.nameCategory === category
+//       );
 
-      res.json({ assets: filteredAssets });
-    } catch (error) {
-      console.error("Error fetching assets by category:", error);
-      res.status(500).json({ message: "Failed to fetch assets by category" });
-    }
-  }
-);
+//       res.json({ assets: filteredAssets });
+//     } catch (error) {
+//       console.error("Error fetching assets by category:", error);
+//       res.status(500).json({ message: "Failed to fetch assets by category" });
+//     }
+//   }
+// );
 // Endpoint untuk mendapatkan daftar aset berdasarkan ID
 app.get("/get-asset/:id", authenticateToken, async (req, res) => {
   const id = parseInt(req.params.id, 10); // Pastikan ID berupa integer
