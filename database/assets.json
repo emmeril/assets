@@ -251,9 +251,42 @@
     "division": "IT",
     "username": "Hafri",
     "brand": "ASUS",
+    "photo": "1749427981274.jpeg",
     "processor": "12th Gen Intel(R) Core(TM) i5-1240P   1.70 GHz",
     "ram": "8 GB",
     "hdd": "320 GB",
     "os": "Windows 11 Pro"
+  },
+  {
+    "id": 1749430849577,
+    "kodeAsset": "KOM-8342",
+    "nameCategory": "Komputer",
+    "description": "-",
+    "serialNumber": "F3790CD6-D179-4B25-94A8-09BDB626EA13",
+    "quantity": 1,
+    "price": 1,
+    "purchaseDate": "2025-06-04",
+    "division": "Laser Cutting",
+    "username": "Admin Laser Cutting",
+    "brand": "PC Rakitan",
+    "photo": "1749430911229.jpeg",
+    "processor": "Intel core i5-4570 CPU @ 3.20GHz ",
+    "ram": "8 GB",
+    "hdd": "512 GB",
+    "os": "Windows 11 Pro"
+  },
+  {
+    "id": 1749434471096,
+    "kodeAsset": "OTH-4837",
+    "nameCategory": "Other",
+    "description": "Samsung Smart TV 55\"",
+    "serialNumber": "0U5X3NGX800852J",
+    "quantity": 1,
+    "price": 1,
+    "purchaseDate": "2025-06-09",
+    "division": "IT",
+    "username": "Hafri",
+    "brand": "Samsung",
+    "photo": "1749434541930.jpeg"
   }
 ]
