@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://192.168.2.11:3100";
+// const API_BASE_URL = "https://localhost:3100";
 const LOGIN_PAGE_URL = "index.html";
 const PROTECTED_PAGES = ["app.html"];
 
@@ -23,7 +23,7 @@ function auth() {
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/login`, {
+        const response = await fetch(`/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(this.form),
@@ -88,7 +88,7 @@ if (isProtectedPage(window.location.pathname)) {
 // === Fetch API ===
 async function fetchCategories() {
   const token = localStorage.getItem("token");
-  const res = await fetch(`${API_BASE_URL}/get-categories`, {
+  const res = await fetch(`/get-categories`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -98,7 +98,7 @@ async function fetchCategories() {
 
 async function fetchAssets() {
   const token = localStorage.getItem("token");
-  const res = await fetch(`${API_BASE_URL}/get-assets`, {
+  const res = await fetch(`/get-assets`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -108,7 +108,7 @@ async function fetchAssets() {
 
 async function addAsset(asset) {
   const token = localStorage.getItem("token");
-  const res = await fetch(`${API_BASE_URL}/add-asset`, {
+  const res = await fetch(`/add-asset`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -123,7 +123,7 @@ async function addAsset(asset) {
 
 async function updateAsset(id, asset) {
   const token = localStorage.getItem("token");
-  const res = await fetch(`${API_BASE_URL}/update-asset/${id}`, {
+  const res = await fetch(`/update-asset/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -138,7 +138,7 @@ async function updateAsset(id, asset) {
 
 async function deleteAsset(id) {
   const token = localStorage.getItem("token");
-  const res = await fetch(`${API_BASE_URL}/delete-asset/${id}`, {
+  const res = await fetch(`/delete-asset/${id}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -150,7 +150,7 @@ async function deleteAsset(id) {
 // === Category API ===
 async function addCategory(nameCategory) {
   const token = localStorage.getItem("token");
-  const res = await fetch(`${API_BASE_URL}/add-category`, {
+  const res = await fetch(`/add-category`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -165,7 +165,7 @@ async function addCategory(nameCategory) {
 
 async function updateCategory(id, nameCategory) {
   const token = localStorage.getItem("token");
-  const res = await fetch(`${API_BASE_URL}/update-category/${id}`, {
+  const res = await fetch(`/update-category/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -180,7 +180,7 @@ async function updateCategory(id, nameCategory) {
 
 async function deleteCategory(id) {
   const token = localStorage.getItem("token");
-  const res = await fetch(`${API_BASE_URL}/delete-category/${id}`, {
+  const res = await fetch(`/delete-category/${id}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -308,8 +308,8 @@ function reminderApp() {
         // Request ke server
         const token = localStorage.getItem("token");
         const url = isEdit
-          ? `${API_BASE_URL}/update-asset/${this.assetForm.id}`
-          : `${API_BASE_URL}/add-asset`;
+          ? `/update-asset/${this.assetForm.id}`
+          : `/add-asset`;
 
         const response = await fetch(url, {
           method: isEdit ? "PUT" : "POST",
@@ -430,7 +430,7 @@ function reminderApp() {
       const token = localStorage.getItem("token");
 
       try {
-        const res = await fetch(`${API_BASE_URL}/import-assets`, {
+        const res = await fetch(`/import-assets`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: formData,
@@ -449,7 +449,7 @@ function reminderApp() {
       const token = localStorage.getItem("token");
 
       try {
-        const res = await fetch(`${API_BASE_URL}/export-assets`, {
+        const res = await fetch(`/export-assets`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

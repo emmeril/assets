@@ -288,5 +288,23 @@
     "username": "Hafri",
     "brand": "Samsung",
     "photo": "1749434541930.jpeg"
+  },
+  {
+    "id": 1750128295422,
+    "kodeAsset": "KOM-9888",
+    "nameCategory": "Komputer",
+    "description": "MB GIGABTYE",
+    "serialNumber": "D1FB42FF-CA9E-4ACB-935B-A5E8C4B6E0DA",
+    "quantity": 1,
+    "price": 7432000,
+    "purchaseDate": "2025-06-17",
+    "division": "IT",
+    "username": "BEACUKAI",
+    "brand": "PC Rakitan",
+    "photo": "1750130400260.jpeg",
+    "processor": "12th Gen Intel(R) Core(TM) i5-12400F   2.50 GHz",
+    "ram": "8 GB",
+    "hdd": "512 GB",
+    "os": "Windows 11 Pro"
   }
 ]

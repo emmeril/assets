@@ -31,10 +31,10 @@ async function startServer() {
 //     credentials: true,
 //   })
 // );
-app.use(cors());
-app.options("*", cors());
+// app.use(cors());
+// app.options("*", cors());
 app.use(express.json());
-app.use(helmet());
+// app.use(helmet());
 app.use(compression());
 app.set("trust proxy", 1);
 app.use("/uploads", (req, res, next) => {
@@ -714,15 +714,24 @@ app.post("/login", async (req, res) => {
 });
 
 // Handle 404 untuk endpoint yang tidak ditemukan
-app.use((req, res) => {
-  res.status(404).json({ message: "Endpoint tidak ditemukan" });
+// app.use((req, res) => {
+//   res.status(404).json({ message: "Endpoint tidak ditemukan" });
+// });
+
+// Serve static frontend files from public/
+app.use(express.static(path.join(__dirname, "frontend")));
+
+// Root
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "index.html"));
 });
 
 
 const key = await fs.readFile("key.pem");
 const cert = await fs.readFile("cert.pem");
-https.createServer({ key, cert }, app).listen(3100, () => {
-  console.log("HTTPS server berjalan di https://localhost:3000");
+const PORT = process.env.PORT;
+https.createServer({ key, cert }, app).listen(PORT, () => {
+  console.log(`🚀 Serverrunning on https://localhost:${PORT}`);
 });
 }
 startServer();
