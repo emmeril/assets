@@ -306,5 +306,22 @@
     "ram": "8 GB",
     "hdd": "512 GB",
     "os": "Windows 11 Pro"
+  },
+  {
+    "id": 1752548103578,
+    "kodeAsset": "KOM-2799",
+    "nameCategory": "Komputer",
+    "description": "PC Server Payroll",
+    "serialNumber": "725A5016-6872-48EC-A679-235E55DB04D7",
+    "quantity": 1,
+    "price": 16000000,
+    "purchaseDate": "2025-07-15",
+    "division": "IT",
+    "username": "Hafri",
+    "brand": "Lenovo",
+    "processor": "Intel(R) Xeon(R) E-2324G CPU @ 3.10GHz   3.10 GHz",
+    "ram": "16,0 GB ",
+    "hdd": "1 TB",
+    "os": "Windows Server 2022 Standard"
   }
 ]
