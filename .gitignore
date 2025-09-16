@@ -4,3 +4,5 @@ pnpm-lock.yaml
 .env
 database
 uploads
+/database
+/database/assets.json
