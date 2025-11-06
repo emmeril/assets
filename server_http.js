@@ -1,9 +1,7 @@
 require("dotenv").config();
 const express = require("express");
-const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
-const helmet = require("helmet");
 const compression = require("compression");
 const fs = require("fs").promises;
 const path = require("path");
@@ -20,12 +18,10 @@ const DATABASE_DIR = path.join(__dirname, "database");
 const CATEGORIES_FILE = path.join(DATABASE_DIR, "categories.json");
 const ASSETS_FILE = path.join(DATABASE_DIR, "assets.json");
 
-// Middleware
-app.use(cors());
-app.use(helmet());
+// Middleware sederhana
 app.use(compression());
 app.use(express.json());
-app.set("trust proxy", 1);
+app.use(express.urlencoded({ extended: true }));
 
 // Static files
 app.use("/uploads", express.static(UPLOAD_DIR));
@@ -33,12 +29,40 @@ app.use(express.static(path.join(__dirname, "frontend")));
 
 // Konfigurasi Multer
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+  destination: async (req, file, cb) => {
+    try {
+      await fs.mkdir(UPLOAD_DIR, { recursive: true });
+      cb(null, UPLOAD_DIR);
+    } catch (error) {
+      cb(error, UPLOAD_DIR);
+    }
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
 });
 
-const upload = multer({ storage });
-const uploadExcel = multer({ dest: "uploads/" });
+const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Hanya file gambar yang diizinkan!'), false);
+    }
+  }
+});
+
+const uploadExcel = multer({ 
+  dest: "uploads/",
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB
+  }
+});
 
 // Validasi Schemas
 const userSchema = Joi.object({
@@ -69,32 +93,41 @@ const assetSchema = Joi.object({
 });
 
 // Utility Functions
-const saveMapToFile = async (map, filePath) => {
+const ensureDirectoryExists = async (filePath) => {
+  const dir = path.dirname(filePath);
+  await fs.mkdir(dir, { recursive: true });
+};
+
+const saveDataToFile = async (data, filePath) => {
   try {
-    await fs.mkdir(path.dirname(filePath), { recursive: true });
-    await fs.writeFile(filePath, JSON.stringify([...map.values()], null, 2));
+    await ensureDirectoryExists(filePath);
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2));
     console.log(`Data berhasil disimpan di ${filePath}`);
   } catch (error) {
     console.error(`Gagal menyimpan data: ${error.message}`);
+    throw error;
   }
 };
 
-const loadMapFromFile = async (filePath, validateFn) => {
-  const map = new Map();
+const loadDataFromFile = async (filePath, validateFn) => {
   try {
-    const data = await fs.readFile(filePath, "utf-8");
-    if (!data.trim()) return map;
+    await fs.access(filePath);
+    const data = await fs.readFile(filePath, 'utf8');
+    if (!data.trim()) return [];
     
-    JSON.parse(data).forEach((item) => {
-      if (validateFn(item)) map.set(item.id, item);
-      else console.warn(`Data tidak valid: ${JSON.stringify(item)}`);
-    });
+    const parsed = JSON.parse(data);
+    const validData = parsed.filter(validateFn);
     
     console.log(`Data berhasil dimuat dari ${filePath}`);
+    return validData;
   } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.log(`File ${filePath} tidak ditemukan, membuat yang baru`);
+      return [];
+    }
     console.error(`Gagal memuat data: ${error.message}`);
+    return [];
   }
-  return map;
 };
 
 const generateAssetCode = (assets, nameCategory) => {
@@ -109,10 +142,10 @@ const generateAssetCode = (assets, nameCategory) => {
 };
 
 // Data Storage
-let categories = new Map();
-let assets = new Map();
+let categories = [];
+let assets = [];
 
-// Middleware
+// Middleware Authentication
 const authenticateToken = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -139,13 +172,19 @@ const authenticateToken = (req, res, next) => {
 
 // Inisialisasi Data
 const initializeData = async () => {
-  categories = await loadMapFromFile(CATEGORIES_FILE, (c) => c.id && c.nameCategory);
-  assets = await loadMapFromFile(ASSETS_FILE, (a) => 
-    a.id && a.nameCategory && a.description && a.serialNumber && a.quantity && a.price
-  );
+  try {
+    categories = await loadDataFromFile(CATEGORIES_FILE, (c) => c.id && c.nameCategory);
+    assets = await loadDataFromFile(ASSETS_FILE, (a) => 
+      a.id && a.nameCategory && a.description && a.serialNumber && a.quantity && a.price
+    );
 
-  await saveMapToFile(categories, CATEGORIES_FILE);
-  await saveMapToFile(assets, ASSETS_FILE);
+    await saveDataToFile(categories, CATEGORIES_FILE);
+    await saveDataToFile(assets, ASSETS_FILE);
+    
+    console.log("Data initialization completed");
+  } catch (error) {
+    console.error("Data initialization failed:", error);
+  }
 };
 
 // Routes
@@ -156,8 +195,8 @@ app.get("/cors-test", (req, res) => {
 // Category Routes
 app.get("/get-categories", authenticateToken, async (req, res) => {
   try {
-    const categoriesData = await fs.readFile(CATEGORIES_FILE, "utf-8");
-    res.json({ categories: JSON.parse(categoriesData || "[]") });
+    const categories = await loadDataFromFile(CATEGORIES_FILE, (c) => c.id && c.nameCategory);
+    res.json({ categories });
   } catch (error) {
     console.error("Error fetching categories:", error);
     res.status(500).json({ message: "Failed to fetch categories" });
@@ -169,11 +208,11 @@ app.post("/add-category", authenticateToken, async (req, res) => {
   if (error) return res.status(400).json({ message: error.details[0].message });
 
   try {
-    const categories = JSON.parse(await fs.readFile(CATEGORIES_FILE, "utf-8") || "[]");
+    const categories = await loadDataFromFile(CATEGORIES_FILE, (c) => c.id && c.nameCategory);
     const category = { id: Date.now(), ...value };
     
     categories.push(category);
-    await fs.writeFile(CATEGORIES_FILE, JSON.stringify(categories, null, 2));
+    await saveDataToFile(categories, CATEGORIES_FILE);
     
     res.json({ message: "Kategori berhasil ditambahkan!", category });
   } catch (error) {
@@ -184,7 +223,7 @@ app.post("/add-category", authenticateToken, async (req, res) => {
 
 app.get("/get-category/:id", authenticateToken, async (req, res) => {
   try {
-    const categories = JSON.parse(await fs.readFile(CATEGORIES_FILE, "utf-8") || "[]");
+    const categories = await loadDataFromFile(CATEGORIES_FILE, (c) => c.id && c.nameCategory);
     const category = categories.find((c) => c.id === parseInt(req.params.id));
     
     if (!category) return res.status(404).json({ message: "Kategori tidak ditemukan!" });
@@ -200,13 +239,13 @@ app.put("/update-category/:id", authenticateToken, async (req, res) => {
   if (error) return res.status(400).json({ message: error.details[0].message });
 
   try {
-    const categories = JSON.parse(await fs.readFile(CATEGORIES_FILE, "utf-8") || "[]");
+    const categories = await loadDataFromFile(CATEGORIES_FILE, (c) => c.id && c.nameCategory);
     const categoryIndex = categories.findIndex((c) => c.id === parseInt(req.params.id));
     
     if (categoryIndex === -1) return res.status(404).json({ message: "Kategori tidak ditemukan!" });
     
     categories[categoryIndex] = { ...categories[categoryIndex], ...value };
-    await fs.writeFile(CATEGORIES_FILE, JSON.stringify(categories, null, 2));
+    await saveDataToFile(categories, CATEGORIES_FILE);
     
     res.json({ message: "Kategori berhasil diperbarui!", category: categories[categoryIndex] });
   } catch (error) {
@@ -217,14 +256,14 @@ app.put("/update-category/:id", authenticateToken, async (req, res) => {
 
 app.delete("/delete-category/:id", authenticateToken, async (req, res) => {
   try {
-    const categories = JSON.parse(await fs.readFile(CATEGORIES_FILE, "utf-8") || "[]");
+    const categories = await loadDataFromFile(CATEGORIES_FILE, (c) => c.id && c.nameCategory);
     const filteredCategories = categories.filter((c) => c.id !== parseInt(req.params.id));
     
     if (categories.length === filteredCategories.length) {
       return res.status(404).json({ message: "Kategori tidak ditemukan!" });
     }
     
-    await fs.writeFile(CATEGORIES_FILE, JSON.stringify(filteredCategories, null, 2));
+    await saveDataToFile(filteredCategories, CATEGORIES_FILE);
     res.json({ message: "Kategori berhasil dihapus!" });
   } catch (error) {
     console.error("Error deleting category:", error);
@@ -235,8 +274,10 @@ app.delete("/delete-category/:id", authenticateToken, async (req, res) => {
 // Asset Routes
 app.get("/get-assets", authenticateToken, async (req, res) => {
   try {
-    const assetsData = await fs.readFile(ASSETS_FILE, "utf-8");
-    res.json({ assets: JSON.parse(assetsData || "[]") });
+    const assets = await loadDataFromFile(ASSETS_FILE, (a) => 
+      a.id && a.nameCategory && a.description && a.serialNumber && a.quantity && a.price
+    );
+    res.json({ assets });
   } catch (error) {
     console.error("Error fetching assets:", error);
     res.status(500).json({ message: "Failed to fetch assets" });
@@ -248,7 +289,10 @@ app.post("/add-asset", upload.single("photo"), authenticateToken, async (req, re
   if (error) return res.status(400).json({ message: error.details[0].message });
 
   try {
-    const assets = JSON.parse(await fs.readFile(ASSETS_FILE, "utf-8") || "[]");
+    const assets = await loadDataFromFile(ASSETS_FILE, (a) => 
+      a.id && a.nameCategory && a.description && a.serialNumber && a.quantity && a.price
+    );
+    
     const { nameCategory, kodeAsset: submittedKodeAsset, ...assetData } = value;
     
     const type = nameCategory.toLowerCase();
@@ -263,14 +307,16 @@ app.post("/add-asset", upload.single("photo"), authenticateToken, async (req, re
       return res.status(400).json({ message: "Semua field wajib diisi." });
     }
 
+    const finalKodeAsset = submittedKodeAsset || generateAssetCode(assets, nameCategory);
+
     const asset = {
       id: Date.now(),
-      kodeAsset: submittedKodeAsset || generateAssetCode(assets, nameCategory),
+      kodeAsset: finalKodeAsset,
       nameCategory,
       ...assetData,
       quantity: Number(assetData.quantity),
       price: Number(assetData.price),
-      photo: req.file?.filename,
+      photo: req.file?.filename || null,
       processor: needsSpec ? assetData.processor : undefined,
       ram: needsSpec ? assetData.ram : undefined,
       hdd: needsSpec ? assetData.hdd : undefined,
@@ -278,7 +324,7 @@ app.post("/add-asset", upload.single("photo"), authenticateToken, async (req, re
     };
 
     assets.push(asset);
-    await fs.writeFile(ASSETS_FILE, JSON.stringify(assets, null, 2));
+    await saveDataToFile(assets, ASSETS_FILE);
     
     res.json({ message: "Aset berhasil ditambahkan!", asset });
   } catch (error) {
@@ -289,7 +335,9 @@ app.post("/add-asset", upload.single("photo"), authenticateToken, async (req, re
 
 app.get("/get-asset/:id", authenticateToken, async (req, res) => {
   try {
-    const assets = JSON.parse(await fs.readFile(ASSETS_FILE, "utf-8") || "[]");
+    const assets = await loadDataFromFile(ASSETS_FILE, (a) => 
+      a.id && a.nameCategory && a.description && a.serialNumber && a.quantity && a.price
+    );
     const asset = assets.find((a) => a.id === parseInt(req.params.id));
     
     if (!asset) return res.status(404).json({ message: "Aset tidak ditemukan!" });
@@ -302,7 +350,9 @@ app.get("/get-asset/:id", authenticateToken, async (req, res) => {
 
 app.put("/update-asset/:id", authenticateToken, upload.single("photo"), async (req, res) => {
   try {
-    const assets = JSON.parse(await fs.readFile(ASSETS_FILE, "utf-8") || "[]");
+    const assets = await loadDataFromFile(ASSETS_FILE, (a) => 
+      a.id && a.nameCategory && a.description && a.serialNumber && a.quantity && a.price
+    );
     const assetIndex = assets.findIndex((a) => a.id === parseInt(req.params.id));
     
     if (assetIndex === -1) return res.status(404).json({ message: "Aset tidak ditemukan!" });
@@ -335,7 +385,7 @@ app.put("/update-asset/:id", authenticateToken, upload.single("photo"), async (r
     };
 
     assets[assetIndex] = updatedAsset;
-    await fs.writeFile(ASSETS_FILE, JSON.stringify(assets, null, 2));
+    await saveDataToFile(assets, ASSETS_FILE);
     
     res.json({ message: "Aset berhasil diperbarui!", asset: updatedAsset });
   } catch (error) {
@@ -346,14 +396,16 @@ app.put("/update-asset/:id", authenticateToken, upload.single("photo"), async (r
 
 app.delete("/delete-asset/:id", authenticateToken, async (req, res) => {
   try {
-    const assets = JSON.parse(await fs.readFile(ASSETS_FILE, "utf-8") || "[]");
+    const assets = await loadDataFromFile(ASSETS_FILE, (a) => 
+      a.id && a.nameCategory && a.description && a.serialNumber && a.quantity && a.price
+    );
     const filteredAssets = assets.filter((a) => a.id !== parseInt(req.params.id));
     
     if (assets.length === filteredAssets.length) {
       return res.status(404).json({ message: "Aset tidak ditemukan!" });
     }
     
-    await fs.writeFile(ASSETS_FILE, JSON.stringify(filteredAssets, null, 2));
+    await saveDataToFile(filteredAssets, ASSETS_FILE);
     res.json({ message: "Aset berhasil dihapus!" });
   } catch (error) {
     console.error("Error deleting asset:", error);
@@ -364,8 +416,10 @@ app.delete("/delete-asset/:id", authenticateToken, async (req, res) => {
 // Export/Import Routes
 app.get("/export-assets", authenticateToken, async (req, res) => {
   try {
-    const jsonData = JSON.parse(await fs.readFile(ASSETS_FILE, "utf-8") || "[]");
-    const worksheet = XLSX.utils.json_to_sheet(jsonData);
+    const assets = await loadDataFromFile(ASSETS_FILE, (a) => 
+      a.id && a.nameCategory && a.description && a.serialNumber && a.quantity && a.price
+    );
+    const worksheet = XLSX.utils.json_to_sheet(assets);
     const workbook = XLSX.utils.book_new();
     
     XLSX.utils.book_append_sheet(workbook, worksheet, "Assets");
@@ -388,7 +442,16 @@ app.post("/import-assets", authenticateToken, uploadExcel.single("file"), async 
     const workbook = XLSX.readFile(req.file.path);
     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
     
-    await fs.writeFile(ASSETS_FILE, JSON.stringify(jsonData, null, 2));
+    // Validasi data yang diimpor
+    const validatedData = jsonData.filter(item => 
+      item.id && item.nameCategory && item.description && item.serialNumber && item.quantity && item.price
+    );
+    
+    await saveDataToFile(validatedData, ASSETS_FILE);
+    
+    // Clean up uploaded file
+    await fs.unlink(req.file.path);
+    
     res.json({ message: "Data berhasil diimpor!" });
   } catch (error) {
     console.error("Import error:", error);
@@ -430,12 +493,45 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "index.html"));
 });
 
+app.get("/app", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "app.html"));
+});
+
+// Health check route
+app.get("/health", (req, res) => {
+  res.json({ status: "OK", timestamp: new Date().toISOString() });
+});
+
+// Handle 404
+app.use((req, res) => {
+  res.status(404).json({ message: "Endpoint tidak ditemukan" });
+});
+
+// Error handling middleware
+app.use((error, req, res, next) => {
+  console.error('Error:', error);
+  res.status(500).json({ message: 'Terjadi kesalahan internal server' });
+});
+
 // Start server
 const startServer = async () => {
-  await initializeData();
-  app.listen(PORT, () => {
-    console.log(`Server berjalan di port ${PORT}`);
-  });
+  try {
+    // Pastikan direktori ada
+    await ensureDirectoryExists(CATEGORIES_FILE);
+    await ensureDirectoryExists(ASSETS_FILE);
+    await ensureDirectoryExists(UPLOAD_DIR);
+    
+    await initializeData();
+    
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server berjalan di http://0.0.0.0:${PORT}`);
+      console.log(`📱 Akses melalui: http://192.168.2.11:${PORT}`);
+      console.log(`💻 Atau localhost: http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
 };
 
-startServer().catch(console.error);
+startServer();

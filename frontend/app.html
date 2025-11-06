@@ -1,498 +1,371 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Management Aset</title>
+    <title>Management Aset - PT. Kaiti Global Indonesia</title>
     <link rel="icon" href="./favicon.ico" type="image/x-icon" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.js"></script>
+    
+    <!-- CSS Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" crossorigin="anonymous" />
 
-
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css"
-        crossorigin="anonymous" />
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="./assets/css/styles.css" />
-    <style>
-        @media (max-width: 768px) {
-            .card-title {
-                font-size: 1rem;
-            }
-
-            .btn-sm {
-                font-size: 0.75rem;
-            }
-
-            form .form-control,
-            .form-select {
-                font-size: 0.85rem;
-            }
-
-            .table th,
-            .table td {
-                font-size: 0.75rem;
-                white-space: nowrap;
-            }
-
-            .list-group-item {
-                font-size: 0.9rem;
-            }
-
-            nav.navbar {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-
-            .btn-group {
-                flex-wrap: nowrap;
-            }
-        }
-    </style>
 </head>
 
-<body x-data="Object.assign(reminderApp(), { activeTab: 'aset' })" x-init="init()">
-
-    <nav id="sidebar" class="active">
-        <div class="custom-menu">
-            <button type="button" id="sidebarCollapse" class="btn btn-primary">
-                <i class="fa fa-bars"></i>
-                <span class="sr-only">Toggle Menu</span>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h5 class="logo">Manajemen Aset</h5>
+            <button type="button" id="sidebarCollapse" class="btn btn-sm btn-primary d-md-none">
+                <i class="fa fa-times"></i>
             </button>
         </div>
-        <div class="p-4">
-            <h5 class="logo">Manajemen Aset</h5>
-            <ul class="list-unstyled components mb-5">
-                <li :class="{ 'active': activeTab === 'aset' }">
-                    <a href="#" class="text-decoration-none" @click.prevent="activeTab = 'aset'">
-                        <span class="fa fa-boxes me-2"></span> Daftar Aset
-                    </a>
-                </li>
-                <li :class="{ 'active': activeTab === 'kategori' }">
-                    <a href="#" class="text-decoration-none" @click.prevent="activeTab = 'kategori'">
-                        <span class="fa fa-tags me-2"></span> Kategori Aset
-                    </a>
-                </li>
-                <li :class="{ 'active': activeTab === 'user' }">
-                    <a href="#" class="text-decoration-none" @click.prevent="activeTab = 'user'">
-                        <span class="fa fa-users me-2"></span> Pengguna
-                    </a>
-                </li>
-            </ul>
-            <h5 class="logo">Helpdesk</h5>
-            <ul class="list-unstyled components mb-5">
-                <li :class="{ 'active': activeTab === 'aset' }">
-                    <a href="#" class="text-decoration-none" @click.prevent="activeTab = 'aset'">
-                        <span class="fa fa-boxes me-2"></span> Tiket
-                    </a>
-                </li>
-                <li :class="{ 'active': activeTab === 'kategori' }">
-                    <a href="#" class="text-decoration-none" @click.prevent="activeTab = 'kategori'">
-                        <span class="fa fa-tags me-2"></span> Kategori
-                    </a>
-                </li>
-                <li :class="{ 'active': activeTab === 'user' }">
-                    <a href="#" class="text-decoration-none" @click.prevent="activeTab = 'user'">
-                        <span class="fa fa-users me-2"></span> Pengguna
-                    </a>
-                </li>
-            </ul>
-
-
-        </div>
+        <ul class="list-unstyled components">
+            <li>
+                <a href="#" class="sidebar-link active" data-tab="aset">
+                    <span class="fa fa-boxes me-2"></span> Daftar Aset
+                </a>
+            </li>
+            <li>
+                <a href="#" class="sidebar-link" data-tab="kategori">
+                    <span class="fa fa-tags me-2"></span> Kategori Aset
+                </a>
+            </li>
+        </ul>
     </nav>
 
-    <div class="container p-3 p-md-5">
-        <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-light px-3 rounded mb-4 bg-light shadow-sm sticky-top">
-            <div class="container-fluid justify-content-between">
-                <span class="navbar-brand text-small">Hello, <i class="fa-solid fa-user"></i> <span
-                        x-text="username"></span></span>
-                <button class="btn btn-sm btn-danger" @click="logout"><i
-                        class="fa-solid fa-right-from-bracket"></i></button>
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navigation -->
+        <nav class="navbar navbar-light bg-light shadow-sm">
+            <div class="container-fluid">
+                <button type="button" id="sidebarToggle" class="btn btn-primary btn-sm me-2 d-md-none">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <span class="navbar-brand">
+                    <i class="fa-solid fa-user me-1"></i> 
+                    <span id="username-display">User</span>
+                </span>
+                <button class="btn btn-sm btn-outline-danger" id="logoutBtn">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+                </button>
             </div>
         </nav>
 
-        <!-- Aset -->
-        <div x-show="activeTab === 'aset'">
-            <div class="container">
-                <h2 class="mb-4">Manajemen Aset IT <br> PT. Kaiti Global Indonesia</h2>
-            </div>
+        <!-- Page Content -->
+        <div class="container-fluid p-3 p-md-4">
+            <!-- Assets Management Section -->
+            <div id="aset-section" class="content-section active">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="mb-1">Manajemen Aset IT</h2>
+                        <p class="text-muted mb-0">PT. Kaiti Global Indonesia</p>
+                    </div>
+                    <div class="d-none d-md-block">
+                        <span class="badge bg-primary fs-6" id="total-assets">Total: 0</span>
+                    </div>
+                </div>
 
-            <!-- Form dan daftar aset -->
-            <!-- Daftar Aset -->
-            <div class="container">
-                <div class="card h-100">
+                <!-- Assets List Card -->
+                <div class="card shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title">Daftar Aset</h5>
+                        <h5 class="card-title d-flex justify-content-between align-items-center mb-3">
+                            <span>Daftar Aset</span>
+                            <span class="badge bg-primary d-md-none" id="total-assets-mobile">Total: 0</span>
+                        </h5>
 
+                        <!-- Action Buttons -->
                         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-                            <button class="btn btn-success btn-sm" @click="exportExcel"><i
-                                    class="fa-solid fa-file-export"></i> Export</button>
-                            <form @submit.prevent="importExcel" enctype="multipart/form-data" class="d-flex gap-2">
-                                <input type="file" accept=".xlsx" @change="handleExcelFile"
-                                    class="form-control form-control-sm" />
-                                <button class="btn btn-primary btn-sm" type="submit"><i
-                                        class="fa-solid fa-file-import"></i></button>
-                            </form>
-                        </div>
-
-                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                            <button class="btn btn-outline-primary btn-sm" @click="openScanModal"><i
-                                    class="fa-solid fa-camera"></i> Scan
-                                Barcode</button>
-                            <button class="btn btn-primary btn-sm " @click="openAssetModal(null)">
-                                <i class="fa fa-plus"></i> Tambah Aset
-                            </button>
-                        </div>
-
-                        <!-- Modal Kamera -->
-                        <div class="modal fade" id="barcodeScannerModal" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content p-3">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Scan Barcode</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                            @click="stopScanModal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <video id="scanner-video" width="100%" autoplay muted playsinline></video>
-                                        <p class="text-muted small mt-2">Arahkan barcode ke kamera.</p>
-                                    </div>
-                                </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-success btn-sm" id="exportBtn">
+                                    <i class="fa-solid fa-file-export me-1"></i> Export
+                                </button>
+                                <form id="importForm" class="d-flex gap-2">
+                                    <input type="file" accept=".xlsx" id="excelFile" class="form-control form-control-sm" />
+                                    <button class="btn btn-primary btn-sm" type="submit">
+                                        <i class="fa-solid fa-file-import"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mt-2 mt-md-0">
+                                <button class="btn btn-outline-primary btn-sm" id="scanBtn">
+                                    <i class="fa-solid fa-camera me-1"></i> Scan
+                                </button>
+                                <button class="btn btn-primary btn-sm" id="addAssetBtn">
+                                    <i class="fa fa-plus me-1"></i> Tambah Aset
+                                </button>
                             </div>
                         </div>
 
-                        <input type="text" class="form-control mb-3" placeholder="🔍 Cari aset..."
-                            x-model="searchQuery" />
-
-                        <!-- Filter -->
-                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mb-4">
-                            <div>
-                                <label><i class="fa-solid fa-clipboard-list"></i> Kategori</label>
-                                <select class="form-select" x-model="filters.nameCategory">
-                                    <option value="">Semua</option>
-                                    <template x-for="cat in allCategories" :key="cat.id">
-                                        <option :value="cat.nameCategory" x-text="cat.nameCategory"></option>
-                                    </template>
+                        <!-- Search and Filters -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-12">
+                                <input type="text" class="form-control" placeholder="🔍 Cari aset..." id="searchInput" />
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label small"><i class="fa-solid fa-clipboard-list me-1"></i> Kategori</label>
+                                <select class="form-select form-select-sm" id="categoryFilter">
+                                    <option value="">Semua Kategori</option>
                                 </select>
                             </div>
-                            <div>
-                                <label><i class="fa-solid fa-qrcode"></i> Kode Aset</label>
-                                <input class="form-control" x-model="filters.kodeAsset" />
+                            
+                            <div class="col-md-4">
+                                <label class="form-label small"><i class="fa-solid fa-qrcode me-1"></i> Kode Aset</label>
+                                <input class="form-control form-control-sm" id="codeFilter" />
                             </div>
-                            <div>
-                                <label><i class="fa-solid fa-tags"></i> Brand</label>
-                                <input class="form-control" x-model="filters.brand" />
-                            </div>
-                            <div>
-                                <label><i class="fa-solid fa-barcode"></i> Serial</label>
-                                <input class="form-control" x-model="filters.serialNumber" />
-                            </div>
-                            <div>
-                                <label><i class="fa-solid fa-calendar"></i> Tanggal</label>
-                                <input type="date" class="form-control" x-model="filters.purchaseDate" />
-                            </div>
-                            <div>
-                                <label><i class="fa-solid fa-user-group"></i> Divisi</label>
-                                <input class="form-control" x-model="filters.division" />
-                            </div>
-                            <div>
-                                <label><i class="fa-solid fa-user"></i> Nama User</label>
-                                <input class="form-control" x-model="filters.username" />
+                            
+                            <div class="col-md-4">
+                                <label class="form-label small"><i class="fa-solid fa-tags me-1"></i> Brand</label>
+                                <input class="form-control form-control-sm" id="brandFilter" />
                             </div>
                         </div>
 
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <label>Tampilkan:</label>
-                            <select class="form-select form-select-sm" style="width: auto" x-model.number="perPage">
-                                <template x-for="opt in perPageOptions" :key="opt">
-                                    <option :value="opt" x-text="opt"></option>
-                                </template>
-                                <option :value="-1">Lihat Semua</option>
-                            </select>
-                        </div>
-
+                        <!-- Assets Table -->
                         <div class="table-responsive">
-                            <table class="table table-bordered table-sm align-middle text-nowrap">
+                            <table class="table table-bordered table-hover table-sm align-middle">
                                 <thead class="table-light text-center">
                                     <tr>
-                                        <th>#</th>
+                                        <th width="40">#</th>
                                         <th>Kategori</th>
                                         <th>Kode</th>
-                                        <th style="min-width: 80px;">Barcode</th>
+                                        <th width="70">QR Code</th>
                                         <th>Brand</th>
                                         <th>Deskripsi</th>
                                         <th>Serial</th>
                                         <th>Tanggal</th>
                                         <th>Divisi</th>
                                         <th>User</th>
-                                        <th>Qty</th>
-                                        <th>Harga</th>
-                                        <th>Spesifikasi</th>
-                                        <th style="min-width: 70px;">Foto</th>
-                                        <th>Aksi</th>
+                                        <th width="50">Qty</th>
+                                        <th width="90">Harga</th>
+                                        <th width="100">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <template x-for="(item, i) in paginatedAssets" :key="item.id">
-                                        <tr>
-                                            <td x-text="i + 1"></td>
-                                            <td x-text="item.nameCategory"></td>
-                                            <td x-text="item.kodeAsset"></td>
-                                            <td class="text-center">
-                                                <img :src="`https://barcode.tec-it.com/barcode.ashx?data=${item.kodeAsset}&code=MobileQRCode&eclevel=L`"
-                                                    alt="QR" style="width: 60px; height: 60px;" />
-                                            </td>
-                                            <td x-text="item.brand"></td>
-                                            <td x-text="item.description"></td>
-                                            <td x-text="item.serialNumber"></td>
-                                            <td x-text="item.purchaseDate"></td>
-                                            <td x-text="item.division"></td>
-                                            <td x-text="item.username"></td>
-                                            <td x-text="item.quantity"></td>
-                                            <td x-text="item.price.toLocaleString()"></td>
-                                            <td>
-                                                <template x-if="['laptop', 'komputer'].includes(item.nameCategory.toLowerCase())">
-                                                    <div>
-                                                        <div><strong>Prosesor:</strong> <span
-                                                                x-text="item.processor"></span></div>
-                                                        <div><strong>RAM:</strong> <span x-text="item.ram"></span></div>
-                                                        <div><strong>HDD:</strong> <span x-text="item.hdd"></span></div>
-                                                        <div><strong>OS:</strong> <span x-text="item.os"></span></div>
-                                                    </div>
-                                                </template>
-                                                <template x-if="!['laptop', 'komputer'].includes(item.nameCategory.toLowerCase())">
-                                                  <span class="text-muted">-</span>
-                                                </template>
-                                      
-                                            </td>
-                                            <td class="text-center">
-                                                <img crossorigin="anonymous"
-                                                    :src="`/uploads/${item.photo}`" alt="Foto"
-                                                    style="width: 60px; object-fit: cover" x-show="item.photo" />
-                                            </td>
-                                            <td class="text-center">
-                                                <button class="btn btn-sm btn-warning mb-1"
-                                                    @click="openAssetModal(item)">
-                                                    <i class="fa-solid fa-pen-to-square"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-danger mb-1"
-                                                    @click="deleteAsset(item.id)">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-secondary mb-1" @click="printLabel(item)">
-                                                    <i class="fa-solid fa-tag"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </template>
+                                <tbody id="assetsTableBody">
+                                    <tr>
+                                        <td colspan="13" class="text-center text-muted py-4">
+                                            <i class="fa-solid fa-spinner fa-spin fa-2x mb-2 d-block"></i>
+                                            Memuat data...
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
 
-
                         <!-- Pagination -->
                         <div class="d-flex justify-content-between align-items-center mt-3">
-                            <p class="text-muted small">
-                                Menampilkan <span x-text="paginatedAssets.length"></span>
-                                dari <span x-text="filteredAssets.length"></span> hasil
-                            </p>
+                            <div class="text-muted small">
+                                Menampilkan <span id="showing-count">0</span>
+                                dari <span id="total-count">0</span> aset
+                            </div>
                             <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-secondary" :disabled="currentPage === 1"
-                                    @click="currentPage--">
-                                    &laquo;
+                                <button class="btn btn-sm btn-outline-primary" id="prevBtn">
+                                    <i class="fa-solid fa-chevron-left"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-secondary" :disabled="currentPage === totalPages"
-                                    @click="currentPage++">
-                                    &raquo;
+                                <button class="btn btn-sm btn-outline-primary" id="nextBtn">
+                                    <i class="fa-solid fa-chevron-right"></i>
                                 </button>
                             </div>
                         </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Kategori -->
-        <div x-show="activeTab === 'kategori'">
-            <!-- Form dan daftar kategori -->
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">Form Kategori</h5>
-                            <form @submit.prevent="submitCategoryForm">
-                                <input type="text" class="form-control mb-2" placeholder="Nama Kategori"
-                                    x-model="categoryForm.nameCategory" required>
-                                <input type="hidden" x-model="categoryForm.id">
-                                <button type="submit" class="btn btn-primary me-2"
-                                    x-text="categoryForm.id ? 'Update' : 'Tambah'"></button>
-                                <button type="button" class="btn btn-secondary" @click="resetCategoryForm"
-                                    x-show="categoryForm.id">Batal</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">Daftar Kategori</h5>
-                            <ul class="list-group">
-                                <template x-for="cat in allCategories" :key="cat.id">
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span x-text="cat.nameCategory"></span>
-                                        <div>
-                                            <button class="btn btn-sm btn-warning me-1"
-                                                @click="editCategory(cat)">Edit</button>
-                                            <button class="btn btn-sm btn-danger"
-                                                @click="deleteCategory(cat.id)">Hapus</button>
-                                        </div>
-                                    </li>
-                                </template>
-                            </ul>
-                        </div>
                     </div>
                 </div>
             </div>
 
-        </div>
+            <!-- Categories Management Section -->
+            <div id="kategori-section" class="content-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Manajemen Kategori</h2>
+                    <span class="badge bg-primary fs-6 d-none d-md-block" id="categories-count-badge">0 kategori</span>
+                </div>
 
-
-
-        <!-- Pengguna -->
-        <div x-show="activeTab === 'user'">
-            <!-- Konten manajemen pengguna -->
-            <p>coba pengguna</p>
-        </div>
-
-
-
-
-
-        <!-- Form dan Daftar Aset -->
-        <div class="modal fade" id="assetModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content p-3">
-                    <div class="modal-header">
-                        <h5 class="modal-title" x-text="assetForm.id ? 'Edit Aset' : 'Tambah Aset'"></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="row g-3">
+                    <!-- Category Form -->
+                    <div class="col-lg-5">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h5 class="card-title d-flex justify-content-between align-items-center">
+                                    <span id="categoryFormTitle">
+                                        <i class="fa-solid fa-plus me-2"></i>Tambah Kategori
+                                    </span>
+                                </h5>
+                                <form id="categoryForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nama Kategori</label>
+                                        <input type="text" class="form-control" placeholder="Masukkan nama kategori"
+                                            id="categoryName" required maxlength="50" />
+                                    </div>
+                                    <input type="hidden" id="categoryId">
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary flex-fill" id="categorySubmitBtn">
+                                            Tambah Kategori
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" id="categoryCancelBtn" style="display: none;">
+                                            Batal
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <!-- 👇 form seperti sebelumnya, tinggal dipindahkan ke sini -->
-                        <form @submit.prevent="submitAssetForm" enctype="multipart/form-data">
-                            <div class="mb-2">
-                                <label><i class="fa-solid fa-clipboard-list"></i> Kategori</label>
-                                <select class="form-select" x-model="assetForm.nameCategory" required>
-                                    <option value="" disabled>Pilih Kategori</option>
-                                    <template x-for="cat in allCategories" :key="cat.id">
-                                        <option x-text="cat.nameCategory" :value="cat.nameCategory"></option>
-                                    </template>
+
+                    <!-- Categories List -->
+                    <div class="col-lg-7">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h5 class="card-title d-flex justify-content-between align-items-center">
+                                    <span>Daftar Kategori</span>
+                                    <span class="badge bg-primary" id="categoriesCount">0</span>
+                                </h5>
+                                
+                                <div class="list-group list-group-flush" id="categoriesList">
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fa-solid fa-spinner fa-spin fa-2x mb-2 d-block"></i>
+                                        Memuat data kategori...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asset Form Modal -->
+    <div class="modal fade" id="assetModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assetModalTitle">Tambah Aset Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="assetForm" enctype="multipart/form-data">
+                        <div class="row g-3">
+                            <!-- Basic Information -->
+                            <div class="col-md-6">
+                                <label class="form-label required"><i class="fa-solid fa-clipboard-list me-1"></i> Kategori</label>
+                                <select class="form-select" id="assetCategory" required>
+                                    <option value="" disabled selected>Pilih Kategori</option>
                                 </select>
                             </div>
 
-                            <div class="mb-2">
-                                <label class="form-label"><i class="fa-solid fa-qrcode"></i> Kode Aset</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" value="auto" x-model="kodeAssetMode"
-                                        id="autoMode">
-                                    <label class="form-check-label" for="autoMode">Generate Otomatis</label>
+                            <div class="col-md-6">
+                                <label class="form-label required"><i class="fa-solid fa-qrcode me-1"></i> Kode Aset</label>
+                                <input type="text" class="form-control" placeholder="Kode aset akan digenerate otomatis"
+                                    id="assetCode" required />
+                            </div>
+
+                            <!-- Asset Details -->
+                            <div class="col-md-6">
+                                <label class="form-label required"><i class="fa-solid fa-tag me-1"></i> Brand</label>
+                                <input type="text" class="form-control" id="assetBrand" required />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label required"><i class="fa-solid fa-barcode me-1"></i> Serial Number</label>
+                                <input type="text" class="form-control" id="assetSerial" required />
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label required"><i class="fa-solid fa-circle-info me-1"></i> Deskripsi</label>
+                                <input type="text" class="form-control" id="assetDescription" required />
+                            </div>
+
+                            <!-- Purchase Information -->
+                            <div class="col-md-6">
+                                <label class="form-label required"><i class="fa-solid fa-calendar me-1"></i> Tanggal Pembelian</label>
+                                <input type="date" class="form-control" id="assetPurchaseDate" required />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label required"><i class="fa-solid fa-hashtag me-1"></i> Jumlah</label>
+                                <input type="number" class="form-control" id="assetQuantity" required min="1" value="1" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label required"><i class="fa-solid fa-money-bill me-1"></i> Harga</label>
+                                <input type="number" class="form-control" id="assetPrice" required min="0" step="0.01" />
+                            </div>
+
+                            <!-- User Information -->
+                            <div class="col-md-6">
+                                <label class="form-label required"><i class="fa-solid fa-user-group me-1"></i> Divisi</label>
+                                <input type="text" class="form-control" id="assetDivision" required />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label required"><i class="fa-solid fa-user me-1"></i> Nama Pengguna</label>
+                                <input type="text" class="form-control" id="assetUsername" required />
+                            </div>
+
+                            <!-- Specifications -->
+                            <div class="col-12" id="specsSection" style="display: none;">
+                                <hr />
+                                <h6 class="mb-3"><i class="fa-solid fa-microchip me-2"></i>Spesifikasi Teknis</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label required">Prosesor</label>
+                                        <input type="text" class="form-control" id="assetProcessor" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label required">RAM</label>
+                                        <input type="text" class="form-control" id="assetRam" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label required">Storage (HDD/SSD)</label>
+                                        <input type="text" class="form-control" id="assetHdd" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label required">Sistem Operasi</label>
+                                        <input type="text" class="form-control" id="assetOs" />
+                                    </div>
                                 </div>
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" value="manual" x-model="kodeAssetMode"
-                                        id="manualMode">
-                                    <label class="form-check-label" for="manualMode">Isi Manual</label>
+                            </div>
+
+                            <!-- Photo Upload -->
+                            <div class="col-12">
+                                <hr />
+                                <label class="form-label"><i class="fa-solid fa-image me-1"></i> Foto Aset</label>
+                                <input type="file" class="form-control" accept="image/*" id="assetPhoto" />
+                                <div class="form-text">
+                                    Format yang didukung: JPG, PNG, GIF. Maksimal 5MB.
                                 </div>
-                                <input type="text" class="form-control" placeholder="Contoh: LPT-0001"
-                                    :disabled="kodeAssetMode === 'auto'" x-model="assetForm.kodeAsset" required>
                             </div>
+                        </div>
 
-
-                            <div class="mb-2"><label><i class="fa-solid fa-calendar"></i> Tanggal Pembelian</label>
-                                <input type="date" class="form-control" x-model="assetForm.purchaseDate" required>
-                            </div>
-
-                            <div class="mb-2"><label><i class="fa-solid fa-user-group"></i> Divisi</label>
-                                <input type="text" class="form-control" x-model="assetForm.division" required>
-                            </div>
-
-                            <div class="mb-2"><label><i class="fa-solid fa-user"></i> Nama Pengguna</label>
-                                <input type="text" class="form-control" x-model="assetForm.username" required>
-                            </div>
-
-                            <div class="mb-2"><label><i class="fa-solid fa-tag"></i> Brand</label>
-                                <input type="text" class="form-control" x-model="assetForm.brand" required>
-                            </div>
-
-                            <div class="mb-2"><label><i class="fa-solid fa-circle-info"></i> Deskripsi</label>
-                                <input type="text" class="form-control" x-model="assetForm.description" required>
-                            </div>
-
-                            <div class="mb-2"><label><i class="fa-solid fa-barcode"></i> Serial Number</label>
-                                <input type="text" class="form-control" x-model="assetForm.serialNumber" required>
-                            </div>
-
-                            <!-- Spesifikasi -->
-                            <template x-if="['laptop', 'komputer'].includes(assetForm.nameCategory?.toLowerCase())">
-                                <div>
-                                    <div class="mb-2"><label><i class="fa-solid fa-microchip"></i> Prosesor</label>
-                                        <input type="text" class="form-control" x-model="assetForm.processor" required>
-                                    </div>
-                                    <div class="mb-2"><label><i class="fa-solid fa-memory"></i> RAM</label>
-                                        <input type="text" class="form-control" x-model="assetForm.ram" required>
-                                    </div>
-                                    <div class="mb-2"><label><i class="fa-solid fa-hdd"></i> HDD</label>
-                                        <input type="text" class="form-control" x-model="assetForm.hdd" required>
-                                    </div>
-                                    <div class="mb-2"><label><i class="fa-solid fa-server"></i> OS</label>
-                                        <input type="text" class="form-control" x-model="assetForm.os" required>
-                                    </div>
-                                </div>
-                            </template>
-
-                            <div class="mb-2"><label><i class="fa-solid fa-hashtag"></i> Jumlah</label>
-                                <input type="number" class="form-control" x-model="assetForm.quantity" required min="1">
-                            </div>
-
-                            <div class="mb-2"><label><i class="fa-solid fa-money-bill"></i> Harga</label>
-                                <input type="number" class="form-control" x-model="assetForm.price" required min="0">
-                            </div>
-
-
-
-                            <div class="mb-2"><label><i class="fa-solid fa-image"></i> Foto Aset</label>
-                                <input type="file" class="form-control" @change="handlePhotoUpload">
-                            </div>
-
-                            <div class="mt-3 d-flex flex-wrap gap-2">
-                                <button type="submit" class="btn btn-primary"
-                                    x-text="assetForm.id ? 'Update' : 'Tambah'"></button>
-                                <button type="button" class="btn btn-secondary" @click="resetAssetForm"
-                                    x-show="assetForm.id">Batal</button>
-                            </div>
-                        </form>
-                    </div>
+                        <div class="modal-footer mt-4">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="assetSubmitBtn">
+                                Simpan Aset
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-
-
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="toast position-fixed bottom-0 end-0 m-3"></div>
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toast-title">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toast-message"></div>
+        </div>
+    </div>
 
-    <script src="./assets/js/script.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- JavaScript Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script src="./assets/js/jquery.min.js"></script>
-    <script src="./assets/js/main.js"></script>
+    
+    <!-- Main Application Script -->
+    <script src="./assets/js/script.js"></script>
 </body>
-
 
 </html>
