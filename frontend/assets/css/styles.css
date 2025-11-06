@@ -419,3 +419,20 @@ img {
 .badge.bg-primary { background: linear-gradient(135deg, #667eea, #764ba2) !important; }
 .badge.bg-warning { background: linear-gradient(135deg, #ffc107, #fd7e14) !important; }
 .badge.bg-danger { background: linear-gradient(135deg, #dc3545, #e83e8c) !important; }
+
+/* Photo preview styles */
+.img-thumbnail {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 2px;
+}
+
+#photoPreviewContainer {
+    margin-top: 10px;
+}
+
+#currentPhotoInfo {
+    font-size: 0.875rem;
+}

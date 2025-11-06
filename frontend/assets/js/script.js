@@ -8,6 +8,7 @@ class AssetManager {
         this.currentPage = 1;
         this.perPage = 10;
         this.currentAssetId = null;
+        this.currentPhotoFile = null;
         
         this.initializeApp();
     }
@@ -42,21 +43,25 @@ class AssetManager {
         const sidebarCollapse = document.getElementById('sidebarCollapse');
 
         // Toggle sidebar on mobile
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.add('active');
-            mainContent.classList.add('sidebar-active');
-        });
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.add('active');
+                mainContent.classList.add('sidebar-active');
+            });
+        }
 
-        sidebarCollapse.addEventListener('click', () => {
-            sidebar.classList.remove('active');
-            mainContent.classList.remove('sidebar-active');
-        });
+        if (sidebarCollapse) {
+            sidebarCollapse.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                mainContent.classList.remove('sidebar-active');
+            });
+        }
 
         // Close sidebar when clicking on overlay (mobile)
         document.addEventListener('click', (e) => {
             if (window.innerWidth <= 768 && 
                 !sidebar.contains(e.target) && 
-                !sidebarToggle.contains(e.target) &&
+                (!sidebarToggle || !sidebarToggle.contains(e.target)) &&
                 sidebar.classList.contains('active')) {
                 sidebar.classList.remove('active');
                 mainContent.classList.remove('sidebar-active');
@@ -75,8 +80,14 @@ class AssetManager {
     }
 
     checkAuth() {
+        this.token = localStorage.getItem('token');
+        this.username = localStorage.getItem('username');
+
         if (!this.token || !this.username) {
-            window.location.href = '/';
+            this.showToast('Silakan login kembali', 'warning');
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
             return false;
         }
 
@@ -90,7 +101,15 @@ class AssetManager {
                 this.logout();
                 return false;
             }
+            
+            // Pastikan token memiliki format JWT yang benar
+            if (!payload.username || !payload.iat) {
+                this.showToast('Token tidak valid', 'danger');
+                this.logout();
+                return false;
+            }
         } catch (e) {
+            console.error('Token validation error:', e);
             this.showToast('Token tidak valid', 'danger');
             this.logout();
             return false;
@@ -100,6 +119,29 @@ class AssetManager {
     }
 
     async apiCall(endpoint, options = {}) {
+        // Pastikan token tersedia dan valid
+        if (!this.token) {
+            this.showToast('Token tidak ditemukan', 'danger');
+            this.logout();
+            return null;
+        }
+
+        // Verifikasi token masih valid
+        try {
+            const payload = JSON.parse(atob(this.token.split('.')[1]));
+            const currentTime = Math.floor(Date.now() / 1000);
+            
+            if (payload.exp && payload.exp < currentTime) {
+                this.showToast('Sesi telah kedaluwarsa', 'warning');
+                this.logout();
+                return null;
+            }
+        } catch (e) {
+            this.showToast('Token tidak valid', 'danger');
+            this.logout();
+            return null;
+        }
+
         const config = {
             headers: {
                 'Authorization': `Bearer ${this.token}`,
@@ -108,12 +150,27 @@ class AssetManager {
             ...options
         };
 
+        // Jangan set Content-Type untuk FormData, biarkan browser yang handle
+        if (options.body && options.body instanceof FormData) {
+            delete config.headers['Content-Type'];
+        }
+
         try {
+            console.log('📤 Making API call to:', endpoint);
+            console.log('🔐 Token format:', config.headers.Authorization ? 'Bearer + token' : 'No token');
+            
             const response = await fetch(endpoint, config);
             
             if (response.status === 401) {
-                this.showToast('Sesi telah kedaluwarsa', 'warning');
+                const errorData = await response.json();
+                this.showToast(errorData.message || 'Sesi telah kedaluwarsa', 'warning');
                 this.logout();
+                return null;
+            }
+
+            if (response.status === 403) {
+                const errorData = await response.json();
+                this.showToast(errorData.message || 'Akses ditolak', 'danger');
                 return null;
             }
 
@@ -190,7 +247,7 @@ class AssetManager {
         const categoriesCount = document.getElementById('categoriesCount');
         const categoriesCountBadge = document.getElementById('categories-count-badge');
         
-        categoriesCount.textContent = this.categories.length;
+        if (categoriesCount) categoriesCount.textContent = this.categories.length;
         if (categoriesCountBadge) {
             categoriesCountBadge.textContent = `${this.categories.length} kategori`;
         }
@@ -242,18 +299,22 @@ class AssetManager {
 
     populateCategoryFilter() {
         const categoryFilter = document.getElementById('categoryFilter');
-        categoryFilter.innerHTML = '<option value="">Semua Kategori</option>' +
-            this.categories.map(cat => 
-                `<option value="${this.escapeHtml(cat.nameCategory)}">${this.escapeHtml(cat.nameCategory)}</option>`
-            ).join('');
+        if (categoryFilter) {
+            categoryFilter.innerHTML = '<option value="">Semua Kategori</option>' +
+                this.categories.map(cat => 
+                    `<option value="${this.escapeHtml(cat.nameCategory)}">${this.escapeHtml(cat.nameCategory)}</option>`
+                ).join('');
+        }
     }
 
     populateAssetCategorySelect() {
         const assetCategory = document.getElementById('assetCategory');
-        assetCategory.innerHTML = '<option value="" disabled selected>Pilih Kategori</option>' +
-            this.categories.map(cat => 
-                `<option value="${this.escapeHtml(cat.nameCategory)}">${this.escapeHtml(cat.nameCategory)}</option>`
-            ).join('');
+        if (assetCategory) {
+            assetCategory.innerHTML = '<option value="" disabled selected>Pilih Kategori</option>' +
+                this.categories.map(cat => 
+                    `<option value="${this.escapeHtml(cat.nameCategory)}">${this.escapeHtml(cat.nameCategory)}</option>`
+                ).join('');
+        }
     }
 
     renderAssets() {
@@ -267,17 +328,17 @@ class AssetManager {
         const filteredAssets = this.filterAssets();
         const paginatedAssets = this.paginateAssets(filteredAssets);
 
-        totalAssets.textContent = `Total: ${this.assets.length}`;
+        if (totalAssets) totalAssets.textContent = `Total: ${this.assets.length}`;
         if (totalAssetsMobile) {
             totalAssetsMobile.textContent = `Total: ${this.assets.length}`;
         }
-        showingCount.textContent = paginatedAssets.length;
-        totalCount.textContent = filteredAssets.length;
+        if (showingCount) showingCount.textContent = paginatedAssets.length;
+        if (totalCount) totalCount.textContent = filteredAssets.length;
 
         if (paginatedAssets.length === 0) {
             assetsTableBody.innerHTML = `
                 <tr>
-                    <td colspan="13" class="text-center text-muted py-4">
+                    <td colspan="14" class="text-center text-muted py-4">
                         <i class="fa-solid fa-box-open fa-2x mb-2 d-block"></i>
                         Tidak ada data aset yang ditemukan
                         ${this.assets.length > 0 ? '<br><small class="text-muted">Coba ubah filter pencarian Anda</small>' : ''}
@@ -290,6 +351,19 @@ class AssetManager {
         assetsTableBody.innerHTML = paginatedAssets.map((asset, index) => {
             const startIndex = (this.currentPage - 1) * this.perPage;
             const rowNumber = startIndex + index + 1;
+            
+            // Photo column
+            let photoHtml = '<span class="text-muted">-</span>';
+            if (asset.photo) {
+                photoHtml = `
+                    <div class="text-center">
+                        <img src="/uploads/${asset.photo}" alt="Foto Aset" 
+                             class="img-thumbnail" style="max-width: 60px; cursor: pointer;" 
+                             onclick="assetManager.viewPhoto('${asset.photo}')"
+                             title="Klik untuk melihat foto">
+                    </div>
+                `;
+            }
             
             return `
                 <tr>
@@ -308,6 +382,7 @@ class AssetManager {
                     <td>${this.escapeHtml(asset.username)}</td>
                     <td class="text-center">${asset.quantity}</td>
                     <td class="text-end">${this.formatCurrency(asset.price)}</td>
+                    <td class="text-center">${photoHtml}</td>
                     <td class="text-center">
                         <div class="btn-group btn-group-sm" role="group">
                             <button class="btn btn-outline-warning edit-asset" data-id="${asset.id}" title="Edit Aset">
@@ -333,8 +408,55 @@ class AssetManager {
         this.updatePaginationControls(filteredAssets.length);
     }
 
+    viewPhoto(photoFilename) {
+        const photoUrl = `/uploads/${photoFilename}`;
+        const newWindow = window.open('', '_blank');
+        newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Foto Aset</title>
+                <style>
+                    body { 
+                        margin: 0; 
+                        padding: 20px; 
+                        text-align: center; 
+                        background: #f8f9fa;
+                    }
+                    img { 
+                        max-width: 90%; 
+                        max-height: 85vh; 
+                        border: 2px solid #dee2e6;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                    }
+                    .photo-info {
+                        margin-top: 15px;
+                        color: #6c757d;
+                        font-family: Arial, sans-serif;
+                    }
+                </style>
+            </head>
+            <body>
+                <img src="${photoUrl}" alt="Foto Aset" onerror="this.style.display='none'; document.getElementById('error').style.display='block'">
+                <div id="error" style="display: none; color: #dc3545; font-family: Arial, sans-serif;">
+                    <i class="fa-solid fa-exclamation-triangle"></i> Foto tidak dapat dimuat
+                </div>
+                <div class="photo-info">
+                    <i class="fa-solid fa-image"></i> Foto Aset - ${photoFilename}
+                </div>
+                <script>
+                    setTimeout(() => window.print(), 500);
+                </script>
+            </body>
+            </html>
+        `);
+        newWindow.document.close();
+    }
+
     attachAssetEventListeners() {
         const assetsTableBody = document.getElementById('assetsTableBody');
+        if (!assetsTableBody) return;
         
         assetsTableBody.querySelectorAll('.edit-asset').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -366,10 +488,15 @@ class AssetManager {
     }
 
     filterAssets() {
-        const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-        const categoryFilter = document.getElementById('categoryFilter').value;
-        const codeFilter = document.getElementById('codeFilter').value.toLowerCase();
-        const brandFilter = document.getElementById('brandFilter').value.toLowerCase();
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const codeFilter = document.getElementById('codeFilter');
+        const brandFilter = document.getElementById('brandFilter');
+
+        const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
+        const categoryValue = categoryFilter ? categoryFilter.value : '';
+        const codeValue = codeFilter ? codeFilter.value.toLowerCase() : '';
+        const brandValue = brandFilter ? brandFilter.value.toLowerCase() : '';
 
         return this.assets.filter(asset => {
             // Search query filter
@@ -390,17 +517,17 @@ class AssetManager {
             }
 
             // Category filter
-            if (categoryFilter && asset.nameCategory !== categoryFilter) {
+            if (categoryValue && asset.nameCategory !== categoryValue) {
                 return false;
             }
 
             // Code filter
-            if (codeFilter && !asset.kodeAsset.toLowerCase().includes(codeFilter)) {
+            if (codeValue && !asset.kodeAsset.toLowerCase().includes(codeValue)) {
                 return false;
             }
 
             // Brand filter
-            if (brandFilter && !asset.brand.toLowerCase().includes(brandFilter)) {
+            if (brandValue && !asset.brand.toLowerCase().includes(brandValue)) {
                 return false;
             }
 
@@ -415,10 +542,12 @@ class AssetManager {
     }
 
     updatePaginationControls(totalItems) {
-        const totalPages = Math.ceil(totalItems / this.perPage);
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
 
+        if (!prevBtn || !nextBtn) return;
+
+        const totalPages = Math.ceil(totalItems / this.perPage);
         prevBtn.disabled = this.currentPage === 1;
         nextBtn.disabled = this.currentPage === totalPages || totalPages === 0;
     }
@@ -434,92 +563,141 @@ class AssetManager {
         });
 
         // Logout
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            this.logout();
-        });
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                this.logout();
+            });
+        }
 
         // Asset filters
-        document.getElementById('searchInput').addEventListener('input', () => {
-            this.currentPage = 1;
-            this.renderAssets();
-        });
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                this.currentPage = 1;
+                this.renderAssets();
+            });
+        }
 
-        document.getElementById('categoryFilter').addEventListener('change', () => {
-            this.currentPage = 1;
-            this.renderAssets();
-        });
+        const categoryFilter = document.getElementById('categoryFilter');
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', () => {
+                this.currentPage = 1;
+                this.renderAssets();
+            });
+        }
 
-        document.getElementById('codeFilter').addEventListener('input', () => {
-            this.currentPage = 1;
-            this.renderAssets();
-        });
+        const codeFilter = document.getElementById('codeFilter');
+        if (codeFilter) {
+            codeFilter.addEventListener('input', () => {
+                this.currentPage = 1;
+                this.renderAssets();
+            });
+        }
 
-        document.getElementById('brandFilter').addEventListener('input', () => {
-            this.currentPage = 1;
-            this.renderAssets();
-        });
+        const brandFilter = document.getElementById('brandFilter');
+        if (brandFilter) {
+            brandFilter.addEventListener('input', () => {
+                this.currentPage = 1;
+                this.renderAssets();
+            });
+        }
 
         // Pagination
-        document.getElementById('prevBtn').addEventListener('click', () => {
-            if (this.currentPage > 1) {
-                this.currentPage--;
-                this.renderAssets();
-            }
-        });
+        const prevBtn = document.getElementById('prevBtn');
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.renderAssets();
+                }
+            });
+        }
 
-        document.getElementById('nextBtn').addEventListener('click', () => {
-            const totalItems = this.filterAssets().length;
-            const totalPages = Math.ceil(totalItems / this.perPage);
-            
-            if (this.currentPage < totalPages) {
-                this.currentPage++;
-                this.renderAssets();
-            }
-        });
+        const nextBtn = document.getElementById('nextBtn');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                const totalItems = this.filterAssets().length;
+                const totalPages = Math.ceil(totalItems / this.perPage);
+                
+                if (this.currentPage < totalPages) {
+                    this.currentPage++;
+                    this.renderAssets();
+                }
+            });
+        }
 
         // Category form
-        document.getElementById('categoryForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.submitCategoryForm();
-        });
+        const categoryForm = document.getElementById('categoryForm');
+        if (categoryForm) {
+            categoryForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.submitCategoryForm();
+            });
+        }
 
-        document.getElementById('categoryCancelBtn').addEventListener('click', () => {
-            this.resetCategoryForm();
-        });
+        const categoryCancelBtn = document.getElementById('categoryCancelBtn');
+        if (categoryCancelBtn) {
+            categoryCancelBtn.addEventListener('click', () => {
+                this.resetCategoryForm();
+            });
+        }
 
         // Asset form
-        document.getElementById('addAssetBtn').addEventListener('click', () => {
-            this.openAssetModal();
-        });
+        const addAssetBtn = document.getElementById('addAssetBtn');
+        if (addAssetBtn) {
+            addAssetBtn.addEventListener('click', () => {
+                this.openAssetModal();
+            });
+        }
 
-        document.getElementById('assetForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.submitAssetForm();
-        });
+        const assetForm = document.getElementById('assetForm');
+        if (assetForm) {
+            assetForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.submitAssetForm();
+            });
+        }
 
-        document.getElementById('assetCategory').addEventListener('change', (e) => {
-            this.toggleSpecifications(e.target.value);
-        });
+        const assetCategory = document.getElementById('assetCategory');
+        if (assetCategory) {
+            assetCategory.addEventListener('change', (e) => {
+                this.toggleSpecifications(e.target.value);
+                this.generateAssetCode();
+            });
+        }
+
+        // Photo preview
+        const assetPhoto = document.getElementById('assetPhoto');
+        if (assetPhoto) {
+            assetPhoto.addEventListener('change', (e) => {
+                this.handlePhotoPreview(e);
+            });
+        }
 
         // Export/Import
-        document.getElementById('exportBtn').addEventListener('click', () => {
-            this.exportAssets();
-        });
+        const exportBtn = document.getElementById('exportBtn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                this.exportAssets();
+            });
+        }
 
-        document.getElementById('importForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.importAssets();
-        });
+        const importForm = document.getElementById('importForm');
+        if (importForm) {
+            importForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.importAssets();
+            });
+        }
 
         // Scan button
-        document.getElementById('scanBtn').addEventListener('click', () => {
-            this.showToast('Fitur scan akan segera hadir', 'info');
-        });
-
-        // Auto-generate asset code when category is selected
-        document.getElementById('assetCategory').addEventListener('change', () => {
-            this.generateAssetCode();
-        });
+        const scanBtn = document.getElementById('scanBtn');
+        if (scanBtn) {
+            scanBtn.addEventListener('click', () => {
+                this.showToast('Fitur scan akan segera hadir', 'info');
+            });
+        }
     }
 
     showSection(sectionName) {
@@ -534,10 +712,16 @@ class AssetManager {
         });
 
         // Show selected section
-        document.getElementById(`${sectionName}-section`).classList.add('active');
+        const sectionElement = document.getElementById(`${sectionName}-section`);
+        if (sectionElement) {
+            sectionElement.classList.add('active');
+        }
         
         // Activate sidebar link
-        document.querySelector(`[data-tab="${sectionName}"]`).classList.add('active');
+        const sidebarLink = document.querySelector(`[data-tab="${sectionName}"]`);
+        if (sidebarLink) {
+            sidebarLink.classList.add('active');
+        }
 
         // Reset page for assets section
         if (sectionName === 'aset') {
@@ -548,19 +732,24 @@ class AssetManager {
 
     // Category Methods
     async submitCategoryForm() {
-        const categoryId = document.getElementById('categoryId').value;
-        const categoryName = document.getElementById('categoryName').value.trim();
+        const categoryId = document.getElementById('categoryId');
+        const categoryName = document.getElementById('categoryName');
         const submitBtn = document.getElementById('categorySubmitBtn');
 
-        if (!categoryName) {
+        if (!categoryName || !submitBtn) return;
+
+        const categoryNameValue = categoryName.value.trim();
+        const categoryIdValue = categoryId ? categoryId.value : '';
+
+        if (!categoryNameValue) {
             this.showToast('Nama kategori harus diisi!', 'warning');
             return;
         }
 
         // Check for duplicate category name
         const isDuplicate = this.categories.some(cat => 
-            cat.nameCategory.toLowerCase() === categoryName.toLowerCase() && 
-            cat.id != categoryId
+            cat.nameCategory.toLowerCase() === categoryNameValue.toLowerCase() && 
+            cat.id != categoryIdValue
         );
 
         if (isDuplicate) {
@@ -572,20 +761,21 @@ class AssetManager {
         submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Menyimpan...';
 
         try {
-            if (categoryId) {
+            let response;
+            if (categoryIdValue) {
                 // Update existing category
-                await this.apiCall(`/update-category/${categoryId}`, {
+                response = await this.apiCall(`/update-category/${categoryIdValue}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nameCategory: categoryName })
+                    body: JSON.stringify({ nameCategory: categoryNameValue })
                 });
                 this.showToast('Kategori berhasil diperbarui', 'success');
             } else {
                 // Add new category
-                await this.apiCall('/add-category', {
+                response = await this.apiCall('/add-category', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nameCategory: categoryName })
+                    body: JSON.stringify({ nameCategory: categoryNameValue })
                 });
                 this.showToast('Kategori berhasil ditambahkan', 'success');
             }
@@ -596,7 +786,7 @@ class AssetManager {
             console.error('Error saving category:', error);
         } finally {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = categoryId ? 'Update Kategori' : 'Tambah Kategori';
+            submitBtn.innerHTML = categoryIdValue ? 'Update Kategori' : 'Tambah Kategori';
         }
     }
 
@@ -604,14 +794,20 @@ class AssetManager {
         const category = this.categories.find(cat => cat.id == categoryId);
         if (!category) return;
 
-        document.getElementById('categoryId').value = category.id;
-        document.getElementById('categoryName').value = category.nameCategory;
-        document.getElementById('categoryFormTitle').innerHTML = '<i class="fa-solid fa-edit me-2"></i>Edit Kategori';
-        document.getElementById('categorySubmitBtn').innerHTML = 'Update Kategori';
-        document.getElementById('categoryCancelBtn').style.display = 'block';
+        const categoryIdElement = document.getElementById('categoryId');
+        const categoryName = document.getElementById('categoryName');
+        const categoryFormTitle = document.getElementById('categoryFormTitle');
+        const categorySubmitBtn = document.getElementById('categorySubmitBtn');
+        const categoryCancelBtn = document.getElementById('categoryCancelBtn');
+
+        if (categoryIdElement) categoryIdElement.value = category.id;
+        if (categoryName) categoryName.value = category.nameCategory;
+        if (categoryFormTitle) categoryFormTitle.innerHTML = '<i class="fa-solid fa-edit me-2"></i>Edit Kategori';
+        if (categorySubmitBtn) categorySubmitBtn.innerHTML = 'Update Kategori';
+        if (categoryCancelBtn) categoryCancelBtn.style.display = 'block';
         
         // Focus on the input field
-        document.getElementById('categoryName').focus();
+        if (categoryName) categoryName.focus();
     }
 
     async deleteCategory(categoryId) {
@@ -641,17 +837,26 @@ class AssetManager {
     }
 
     resetCategoryForm() {
-        document.getElementById('categoryForm').reset();
-        document.getElementById('categoryId').value = '';
-        document.getElementById('categoryFormTitle').innerHTML = '<i class="fa-solid fa-plus me-2"></i>Tambah Kategori';
-        document.getElementById('categorySubmitBtn').innerHTML = 'Tambah Kategori';
-        document.getElementById('categoryCancelBtn').style.display = 'none';
+        const categoryForm = document.getElementById('categoryForm');
+        const categoryId = document.getElementById('categoryId');
+        const categoryFormTitle = document.getElementById('categoryFormTitle');
+        const categorySubmitBtn = document.getElementById('categorySubmitBtn');
+        const categoryCancelBtn = document.getElementById('categoryCancelBtn');
+
+        if (categoryForm) categoryForm.reset();
+        if (categoryId) categoryId.value = '';
+        if (categoryFormTitle) categoryFormTitle.innerHTML = '<i class="fa-solid fa-plus me-2"></i>Tambah Kategori';
+        if (categorySubmitBtn) categorySubmitBtn.innerHTML = 'Tambah Kategori';
+        if (categoryCancelBtn) categoryCancelBtn.style.display = 'none';
     }
 
     // Asset Methods
     openAssetModal(assetId = null) {
         this.currentAssetId = assetId;
-        const modal = new bootstrap.Modal(document.getElementById('assetModal'));
+        const modalElement = document.getElementById('assetModal');
+        if (!modalElement) return;
+
+        const modal = new bootstrap.Modal(modalElement);
         const modalTitle = document.getElementById('assetModalTitle');
         const submitBtn = document.getElementById('assetSubmitBtn');
 
@@ -660,46 +865,60 @@ class AssetManager {
             const asset = this.assets.find(a => a.id == assetId);
             if (asset) {
                 this.populateAssetForm(asset);
-                modalTitle.textContent = 'Edit Aset';
-                submitBtn.textContent = 'Update Aset';
+                if (modalTitle) modalTitle.textContent = 'Edit Aset';
+                if (submitBtn) submitBtn.textContent = 'Update Aset';
             }
         } else {
             // Add mode
             this.resetAssetForm();
-            modalTitle.textContent = 'Tambah Aset Baru';
-            submitBtn.textContent = 'Simpan Aset';
+            if (modalTitle) modalTitle.textContent = 'Tambah Aset Baru';
+            if (submitBtn) submitBtn.textContent = 'Simpan Aset';
         }
 
         modal.show();
     }
 
     populateAssetForm(asset) {
-        document.getElementById('assetCategory').value = asset.nameCategory;
-        document.getElementById('assetCode').value = asset.kodeAsset;
-        document.getElementById('assetBrand').value = asset.brand;
-        document.getElementById('assetSerial').value = asset.serialNumber;
-        document.getElementById('assetDescription').value = asset.description;
-        document.getElementById('assetPurchaseDate').value = asset.purchaseDate;
-        document.getElementById('assetQuantity').value = asset.quantity;
-        document.getElementById('assetPrice').value = asset.price;
-        document.getElementById('assetDivision').value = asset.division;
-        document.getElementById('assetUsername').value = asset.username;
-        
-        // Specifications
-        document.getElementById('assetProcessor').value = asset.processor || '';
-        document.getElementById('assetRam').value = asset.ram || '';
-        document.getElementById('assetHdd').value = asset.hdd || '';
-        document.getElementById('assetOs').value = asset.os || '';
+        const fields = {
+            'assetCategory': asset.nameCategory,
+            'assetCode': asset.kodeAsset,
+            'assetBrand': asset.brand,
+            'assetSerial': asset.serialNumber,
+            'assetDescription': asset.description,
+            'assetPurchaseDate': asset.purchaseDate,
+            'assetQuantity': asset.quantity,
+            'assetPrice': asset.price,
+            'assetDivision': asset.division,
+            'assetUsername': asset.username,
+            'assetProcessor': asset.processor || '',
+            'assetRam': asset.ram || '',
+            'assetHdd': asset.hdd || '',
+            'assetOs': asset.os || ''
+        };
+
+        Object.entries(fields).forEach(([fieldId, value]) => {
+            const element = document.getElementById(fieldId);
+            if (element) element.value = value;
+        });
 
         this.toggleSpecifications(asset.nameCategory);
+        this.showCurrentPhoto(asset.photo);
     }
 
     resetAssetForm() {
-        document.getElementById('assetForm').reset();
-        document.getElementById('assetPurchaseDate').value = new Date().toISOString().split('T')[0];
-        document.getElementById('assetQuantity').value = '1';
-        document.getElementById('specsSection').style.display = 'none';
+        const assetForm = document.getElementById('assetForm');
+        if (assetForm) assetForm.reset();
+        
+        const purchaseDate = document.getElementById('assetPurchaseDate');
+        if (purchaseDate) purchaseDate.value = new Date().toISOString().split('T')[0];
+        
+        const quantity = document.getElementById('assetQuantity');
+        if (quantity) quantity.value = '1';
+        
+        this.toggleSpecifications('');
+        this.hidePhotoPreview();
         this.currentAssetId = null;
+        this.currentPhotoFile = null;
         
         // Generate initial asset code
         this.generateAssetCode();
@@ -707,93 +926,258 @@ class AssetManager {
 
     toggleSpecifications(category) {
         const specsSection = document.getElementById('specsSection');
+        if (!specsSection) return;
+
         const needsSpec = ['laptop', 'komputer'].includes(category?.toLowerCase());
         
         if (needsSpec) {
             specsSection.style.display = 'block';
-            // Add required attribute to spec inputs
-            ['assetProcessor', 'assetRam', 'assetHdd', 'assetOs'].forEach(id => {
-                document.getElementById(id).required = true;
+            
+            // Set required fields for specs
+            const specFields = ['assetProcessor', 'assetRam', 'assetHdd', 'assetOs'];
+            specFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.required = true;
+                    const label = field.previousElementSibling;
+                    if (label && !label.classList.contains('required')) {
+                        label.classList.add('required');
+                    }
+                }
             });
         } else {
             specsSection.style.display = 'none';
-            // Remove required attribute from spec inputs
-            ['assetProcessor', 'assetRam', 'assetHdd', 'assetOs'].forEach(id => {
-                document.getElementById(id).required = false;
+            
+            // Remove required from spec fields
+            const specFields = ['assetProcessor', 'assetRam', 'assetHdd', 'assetOs'];
+            specFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.required = false;
+                    const label = field.previousElementSibling;
+                    if (label) {
+                        label.classList.remove('required');
+                    }
+                }
             });
         }
     }
 
     generateAssetCode() {
-        const category = document.getElementById('assetCategory').value;
-        if (!category || this.currentAssetId) return;
+        const category = document.getElementById('assetCategory');
+        const code = document.getElementById('assetCode');
+        
+        if (!category || !code || this.currentAssetId) return;
 
-        const prefix = category.substring(0, 3).toUpperCase();
+        const categoryValue = category.value;
+        if (!categoryValue) return;
+
+        const prefix = categoryValue.substring(0, 3).toUpperCase();
         const timestamp = Date.now().toString().slice(-4);
         const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-        document.getElementById('assetCode').value = `${prefix}-${timestamp}${random}`;
+        code.value = `${prefix}-${timestamp}${random}`;
+    }
+
+    handlePhotoPreview(event) {
+        const file = event.target.files[0];
+        const previewContainer = document.getElementById('photoPreviewContainer');
+        const preview = document.getElementById('photoPreview');
+        const currentPhotoInfo = document.getElementById('currentPhotoInfo');
+
+        if (!file) {
+            this.hidePhotoPreview();
+            return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            this.showToast('Hanya file gambar yang diizinkan!', 'warning');
+            event.target.value = '';
+            this.hidePhotoPreview();
+            return;
+        }
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            this.showToast('Ukuran file maksimal 5MB!', 'warning');
+            event.target.value = '';
+            this.hidePhotoPreview();
+            return;
+        }
+
+        this.currentPhotoFile = file;
+
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            if (previewContainer) {
+                previewContainer.style.display = 'block';
+            }
+            if (currentPhotoInfo) {
+                currentPhotoInfo.innerHTML = `
+                    <div class="text-success">
+                        <i class="fa-solid fa-check"></i> File siap diupload: ${file.name}
+                    </div>
+                `;
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    showCurrentPhoto(photoFilename) {
+        const previewContainer = document.getElementById('photoPreviewContainer');
+        const preview = document.getElementById('photoPreview');
+        const currentPhotoInfo = document.getElementById('currentPhotoInfo');
+
+        if (photoFilename) {
+            if (preview) {
+                preview.src = `/uploads/${photoFilename}`;
+                preview.style.display = 'block';
+                preview.onerror = () => {
+                    if (preview) preview.style.display = 'none';
+                    if (currentPhotoInfo) {
+                        currentPhotoInfo.innerHTML = `
+                            <div class="text-warning">
+                                <i class="fa-solid fa-exclamation-triangle"></i> Foto tidak ditemukan: ${photoFilename}
+                            </div>
+                        `;
+                    }
+                };
+            }
+            if (previewContainer) {
+                previewContainer.style.display = 'block';
+            }
+            if (currentPhotoInfo) {
+                currentPhotoInfo.innerHTML = `
+                    <div class="text-info">
+                        <i class="fa-solid fa-image"></i> Foto saat ini: ${photoFilename}
+                    </div>
+                `;
+            }
+        } else {
+            this.hidePhotoPreview();
+        }
+    }
+
+    hidePhotoPreview() {
+        const previewContainer = document.getElementById('photoPreviewContainer');
+        const preview = document.getElementById('photoPreview');
+        const currentPhotoInfo = document.getElementById('currentPhotoInfo');
+
+        if (previewContainer) previewContainer.style.display = 'none';
+        if (preview) {
+            preview.src = '#';
+            preview.style.display = 'none';
+        }
+        if (currentPhotoInfo) currentPhotoInfo.innerHTML = '';
     }
 
     async submitAssetForm() {
-        const formData = new FormData();
         const submitBtn = document.getElementById('assetSubmitBtn');
 
-        // Collect form data
-        const formFields = [
-            'assetCategory', 'assetCode', 'assetBrand', 'assetSerial', 
-            'assetDescription', 'assetPurchaseDate', 'assetQuantity', 
-            'assetPrice', 'assetDivision', 'assetUsername', 'assetProcessor', 
-            'assetRam', 'assetHdd', 'assetOs'
+        if (!submitBtn) return;
+
+        // Validasi form manual
+        const requiredFields = [
+            'assetCategory', 'assetCode', 'assetBrand', 'assetSerial',
+            'assetDescription', 'assetPurchaseDate', 'assetQuantity',
+            'assetPrice', 'assetDivision', 'assetUsername'
         ];
 
-        formFields.forEach(field => {
-            const value = document.getElementById(field).value;
-            const fieldName = field.replace('asset', '').replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
-            if (value) {
-                formData.append(fieldName, value);
+        const missingFields = [];
+        for (const fieldId of requiredFields) {
+            const field = document.getElementById(fieldId);
+            if (field && (!field.value || field.value.trim() === '')) {
+                const fieldName = fieldId.replace('asset', '').replace(/([A-Z])/g, ' $1').toLowerCase();
+                missingFields.push(fieldName);
             }
-        });
+        }
+
+        // Validasi spesifikasi untuk laptop/komputer
+        const category = document.getElementById('assetCategory').value;
+        const needsSpec = ['laptop', 'komputer'].includes(category?.toLowerCase());
+        
+        if (needsSpec) {
+            const specFields = ['assetProcessor', 'assetRam', 'assetHdd', 'assetOs'];
+            const missingSpecs = [];
+            
+            for (const fieldId of specFields) {
+                const field = document.getElementById(fieldId);
+                if (field && (!field.value || field.value.trim() === '')) {
+                    const fieldName = fieldId.replace('asset', '').replace(/([A-Z])/g, ' $1').toLowerCase();
+                    missingSpecs.push(fieldName);
+                }
+            }
+            
+            if (missingSpecs.length > 0) {
+                this.showToast(`Untuk kategori ${category}, field berikut harus diisi: ${missingSpecs.join(', ')}`, 'warning');
+                return;
+            }
+        }
+
+        if (missingFields.length > 0) {
+            this.showToast(`Field berikut harus diisi: ${missingFields.join(', ')}`, 'warning');
+            return;
+        }
+
+        // Buat FormData secara manual
+        const formData = new FormData();
+        
+        // Tambahkan semua field secara eksplisit
+        formData.append('nameCategory', document.getElementById('assetCategory').value);
+        formData.append('kodeAsset', document.getElementById('assetCode').value);
+        formData.append('brand', document.getElementById('assetBrand').value);
+        formData.append('serialNumber', document.getElementById('assetSerial').value);
+        formData.append('description', document.getElementById('assetDescription').value);
+        formData.append('purchaseDate', document.getElementById('assetPurchaseDate').value);
+        formData.append('quantity', document.getElementById('assetQuantity').value);
+        formData.append('price', document.getElementById('assetPrice').value);
+        formData.append('division', document.getElementById('assetDivision').value);
+        formData.append('username', document.getElementById('assetUsername').value);
+
+        // Tambahkan field spesifikasi jika diperlukan
+        if (needsSpec) {
+            formData.append('processor', document.getElementById('assetProcessor').value);
+            formData.append('ram', document.getElementById('assetRam').value);
+            formData.append('hdd', document.getElementById('assetHdd').value);
+            formData.append('os', document.getElementById('assetOs').value);
+        }
 
         // Add photo file if selected
-        const photoFile = document.getElementById('assetPhoto').files[0];
-        if (photoFile) {
-            // Validate file type and size
-            if (!photoFile.type.startsWith('image/')) {
-                this.showToast('Hanya file gambar yang diizinkan!', 'warning');
-                return;
-            }
-            if (photoFile.size > 5 * 1024 * 1024) {
-                this.showToast('Ukuran file maksimal 5MB!', 'warning');
-                return;
-            }
-            formData.append('photo', photoFile);
+        if (this.currentPhotoFile) {
+            formData.append('photo', this.currentPhotoFile);
         }
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Menyimpan...';
 
         try {
+            let endpoint = '/add-asset';
+            let method = 'POST';
+
             if (this.currentAssetId) {
-                // Update existing asset
-                await this.apiCall(`/update-asset/${this.currentAssetId}`, {
-                    method: 'PUT',
-                    body: formData
-                });
-                this.showToast('Aset berhasil diperbarui', 'success');
-            } else {
-                // Add new asset
-                await this.apiCall('/add-asset', {
-                    method: 'POST',
-                    body: formData
-                });
-                this.showToast('Aset berhasil ditambahkan', 'success');
+                endpoint = `/update-asset/${this.currentAssetId}`;
+                method = 'PUT';
             }
 
+            await this.apiCall(endpoint, {
+                method: method,
+                body: formData
+            });
+
+            this.showToast(`Aset berhasil ${this.currentAssetId ? 'diperbarui' : 'ditambahkan'}`, 'success');
             await this.loadAssets();
             this.resetAssetForm();
             
-            const modal = bootstrap.Modal.getInstance(document.getElementById('assetModal'));
-            modal.hide();
+            const modalElement = document.getElementById('assetModal');
+            if (modalElement) {
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) modal.hide();
+            }
         } catch (error) {
             console.error('Error saving asset:', error);
         } finally {
@@ -822,6 +1206,13 @@ OS: ${asset.os || '-'}
             `;
         }
 
+        let photoText = '';
+        if (asset.photo) {
+            photoText = `Foto: Tersedia (${asset.photo})`;
+        } else {
+            photoText = 'Foto: Tidak tersedia';
+        }
+
         const details = `
 KODE: ${asset.kodeAsset}
 KATEGORI: ${asset.nameCategory}
@@ -833,6 +1224,7 @@ PENGGUNA: ${asset.username}
 TANGGAL: ${this.formatDate(asset.purchaseDate)}
 QUANTITY: ${asset.quantity}
 HARGA: ${this.formatCurrency(asset.price)}
+${photoText}
 ${specsText}
         `.trim();
         
@@ -976,6 +1368,8 @@ ${specsText}
 
     async importAssets() {
         const fileInput = document.getElementById('excelFile');
+        if (!fileInput) return;
+
         const file = fileInput.files[0];
 
         if (!file) {
@@ -1071,9 +1465,12 @@ ${specsText}
     }
 }
 
+// Buat instance global untuk akses dari HTML
+let assetManager;
+
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    new AssetManager();
+    assetManager = new AssetManager();
 });
 
 // Handle window resize for responsive sidebar
@@ -1081,7 +1478,7 @@ window.addEventListener('resize', function() {
     const sidebar = document.getElementById('sidebar');
     const mainContent = document.querySelector('.main-content');
     
-    if (window.innerWidth > 768) {
+    if (window.innerWidth > 768 && sidebar && mainContent) {
         sidebar.classList.remove('active');
         mainContent.classList.remove('sidebar-active');
     }
