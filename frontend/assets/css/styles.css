@@ -436,3 +436,107 @@ img {
 #currentPhotoInfo {
     font-size: 0.875rem;
 }
+
+/* Scanner Styles */
+#scanArea {
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #007bff !important;
+}
+
+.scanner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.scanner-frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    border: 2px solid #00ff00;
+    border-radius: 10px;
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.3);
+}
+
+.scanner-laser {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #ff0000;
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
+    animation: scan 2s infinite linear;
+}
+
+@keyframes scan {
+    0% {
+        transform: translateY(-100px);
+    }
+    50% {
+        transform: translateY(100px);
+    }
+    100% {
+        transform: translateY(-100px);
+    }
+}
+
+/* Scanner button states */
+#startScanBtn:disabled,
+#stopScanBtn:disabled,
+#useScanResultBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Scanner result input */
+#scanResult {
+    font-weight: bold;
+    background-color: #f8f9fa;
+    border: 2px solid #28a745 !important;
+}
+
+/* Mobile scanner adjustments */
+@media (max-width: 768px) {
+    .scanner-frame {
+        width: 150px;
+        height: 150px;
+    }
+    
+    #scanner-video {
+        height: 250px;
+    }
+}
+
+/* Scanner loading state */
+.scanner-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.scanner-loading .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

@@ -10,6 +10,11 @@ class AssetManager {
         this.currentAssetId = null;
         this.currentPhotoFile = null;
         
+        // Barcode scanning variables
+        this.codeReader = null;
+        this.isScanning = false;
+        this.scanStream = null;
+        
         this.initializeApp();
     }
 
@@ -691,11 +696,40 @@ class AssetManager {
             });
         }
 
-        // Scan button
+        // Scan functionality
         const scanBtn = document.getElementById('scanBtn');
         if (scanBtn) {
             scanBtn.addEventListener('click', () => {
-                this.showToast('Fitur scan akan segera hadir', 'info');
+                this.openScanModal();
+            });
+        }
+
+        const startScanBtn = document.getElementById('startScanBtn');
+        if (startScanBtn) {
+            startScanBtn.addEventListener('click', () => {
+                this.startScanning();
+            });
+        }
+
+        const stopScanBtn = document.getElementById('stopScanBtn');
+        if (stopScanBtn) {
+            stopScanBtn.addEventListener('click', () => {
+                this.stopScanning();
+            });
+        }
+
+        const useScanResultBtn = document.getElementById('useScanResultBtn');
+        if (useScanResultBtn) {
+            useScanResultBtn.addEventListener('click', () => {
+                this.useScanResult();
+            });
+        }
+
+        // Close scan modal event
+        const scanModal = document.getElementById('scanModal');
+        if (scanModal) {
+            scanModal.addEventListener('hidden.bs.modal', () => {
+                this.stopScanning();
             });
         }
     }
@@ -1330,6 +1364,175 @@ ${specsText}
         
         printWindow.document.write(labelHTML);
         printWindow.document.close();
+    }
+
+    // Barcode Scanning Methods
+    openScanModal() {
+        const scanModal = new bootstrap.Modal(document.getElementById('scanModal'));
+        scanModal.show();
+        
+        // Reset scan result
+        const scanResult = document.getElementById('scanResult');
+        if (scanResult) {
+            scanResult.value = '';
+        }
+        
+        const useScanResultBtn = document.getElementById('useScanResultBtn');
+        if (useScanResultBtn) {
+            useScanResultBtn.disabled = true;
+        }
+    }
+
+    async startScanning() {
+        try {
+            this.codeReader = new ZXing.BrowserMultiFormatReader();
+            
+            const videoElement = document.getElementById('scanner-video');
+            const startScanBtn = document.getElementById('startScanBtn');
+            const stopScanBtn = document.getElementById('stopScanBtn');
+            
+            if (!videoElement) {
+                throw new Error('Video element not found');
+            }
+
+            // Get available video inputs
+            const videoInputDevices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+            
+            let selectedDeviceId;
+            if (videoInputDevices.length > 0) {
+                // Use back camera if available, otherwise use first camera
+                const backCamera = videoInputDevices.find(device => 
+                    device.label.toLowerCase().includes('back') || 
+                    device.label.toLowerCase().includes('rear')
+                );
+                selectedDeviceId = backCamera ? backCamera.deviceId : videoInputDevices[0].deviceId;
+            }
+
+            // Update UI
+            if (startScanBtn) startScanBtn.disabled = true;
+            if (stopScanBtn) stopScanBtn.disabled = false;
+
+            this.isScanning = true;
+
+            // Start decoding
+            this.codeReader.decodeFromVideoDevice(
+                selectedDeviceId,
+                videoElement,
+                (result, error) => {
+                    if (result) {
+                        this.handleScanResult(result.text);
+                    }
+                    
+                    if (error && !(error instanceof ZXing.NotFoundException)) {
+                        console.error('Scan error:', error);
+                    }
+                }
+            );
+
+            this.showToast('Scanning dimulai. Arahkan kamera ke barcode/QR code.', 'info');
+
+        } catch (error) {
+            console.error('Error starting scan:', error);
+            this.showToast('Gagal memulai scan: ' + error.message, 'danger');
+            
+            // Reset UI
+            const startScanBtn = document.getElementById('startScanBtn');
+            const stopScanBtn = document.getElementById('stopScanBtn');
+            if (startScanBtn) startScanBtn.disabled = false;
+            if (stopScanBtn) stopScanBtn.disabled = true;
+        }
+    }
+
+    stopScanning() {
+        if (this.codeReader) {
+            this.codeReader.reset();
+            this.codeReader = null;
+        }
+
+        this.isScanning = false;
+
+        // Stop video stream
+        const videoElement = document.getElementById('scanner-video');
+        if (videoElement && videoElement.srcObject) {
+            const tracks = videoElement.srcObject.getTracks();
+            tracks.forEach(track => track.stop());
+            videoElement.srcObject = null;
+        }
+
+        // Update UI
+        const startScanBtn = document.getElementById('startScanBtn');
+        const stopScanBtn = document.getElementById('stopScanBtn');
+        if (startScanBtn) startScanBtn.disabled = false;
+        if (stopScanBtn) stopScanBtn.disabled = true;
+
+        this.showToast('Scanning dihentikan', 'info');
+    }
+
+    handleScanResult(resultText) {
+        console.log('Scan result:', resultText);
+        
+        const scanResult = document.getElementById('scanResult');
+        const useScanResultBtn = document.getElementById('useScanResultBtn');
+        
+        if (scanResult) {
+            scanResult.value = resultText;
+        }
+        
+        if (useScanResultBtn) {
+            useScanResultBtn.disabled = false;
+        }
+
+        // Auto-stop scanning after successful scan
+        this.stopScanning();
+        
+        // Play success sound (optional)
+        this.playScanSuccessSound();
+        
+        this.showToast('Barcode berhasil dipindai!', 'success');
+    }
+
+    useScanResult() {
+        const scanResult = document.getElementById('scanResult');
+        const searchInput = document.getElementById('searchInput');
+        
+        if (scanResult && scanResult.value && searchInput) {
+            searchInput.value = scanResult.value;
+            
+            // Close modal
+            const scanModal = bootstrap.Modal.getInstance(document.getElementById('scanModal'));
+            if (scanModal) {
+                scanModal.hide();
+            }
+            
+            // Trigger search
+            this.currentPage = 1;
+            this.renderAssets();
+            
+            this.showToast('Hasil scan diterapkan ke pencarian', 'success');
+        }
+    }
+
+    playScanSuccessSound() {
+        // Create a simple beep sound
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        } catch (error) {
+            console.log('Audio not supported:', error);
+        }
     }
 
     // Export/Import Methods
