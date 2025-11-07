@@ -241,7 +241,7 @@ app.get("/get-categories", authenticateToken, async (req, res) => {
   }
 });
 
-app.post("/add-category", authenticateToken, async (req, res) => {
+app.post("/add-category", async (req, res) => {
   const { error, value } = categorySchema.validate(req.body);
   if (error) return res.status(400).json({ message: error.details[0].message });
 
@@ -272,7 +272,7 @@ app.get("/get-category/:id", authenticateToken, async (req, res) => {
   }
 });
 
-app.put("/update-category/:id", authenticateToken, async (req, res) => {
+app.put("/update-category/:id",  async (req, res) => {
   const { error, value } = categorySchema.validate(req.body);
   if (error) return res.status(400).json({ message: error.details[0].message });
 
