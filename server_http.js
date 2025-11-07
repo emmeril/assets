@@ -656,10 +656,8 @@ const startServer = async () => {
     
     await initializeData();
     
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server berjalan di http://0.0.0.0:${PORT}`);
-      console.log(`📱 Akses melalui: http://192.168.2.11:${PORT}`);
-      console.log(`💻 Atau localhost: http://localhost:${PORT}`);
+    app.listen(PORT, () => {
+      console.log(`🚀 Server berjalan di ${PORT}`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);
