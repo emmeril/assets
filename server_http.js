@@ -13,7 +13,7 @@ const app = express();
 
 // Konfigurasi
 const JWT_SECRET = process.env.JWT_SECRET;
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 6785;
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 const DATABASE_DIR = path.join(__dirname, "database");
 const CATEGORIES_FILE = path.join(DATABASE_DIR, "categories.json");
