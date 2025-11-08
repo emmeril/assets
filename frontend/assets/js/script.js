@@ -11,9 +11,8 @@ class AssetManager {
         this.currentPhotoFile = null;
         
         // Barcode scanning variables
-        this.codeReader = null;
+        this.html5QrCode = null;
         this.isScanning = false;
-        this.scanStream = null;
         
         this.initializeApp();
     }
@@ -1366,7 +1365,7 @@ ${specsText}
         printWindow.document.close();
     }
 
-    // Barcode Scanning Methods
+    // Barcode Scanning Methods dengan Html5Qrcode
     openScanModal() {
         const scanModal = new bootstrap.Modal(document.getElementById('scanModal'));
         scanModal.show();
@@ -1381,31 +1380,33 @@ ${specsText}
         if (useScanResultBtn) {
             useScanResultBtn.disabled = true;
         }
+
+        // Initialize scanner
+        this.initializeScanner();
+    }
+
+    initializeScanner() {
+        try {
+            // Clean up previous instance
+            if (this.html5QrCode) {
+                this.html5QrCode.clear();
+            }
+
+            this.html5QrCode = new Html5Qrcode("qr-reader");
+            
+        } catch (error) {
+            console.error('Error initializing scanner:', error);
+            this.showToast('Gagal menginisialisasi scanner: ' + error.message, 'danger');
+        }
     }
 
     async startScanning() {
         try {
-            this.codeReader = new ZXing.BrowserMultiFormatReader();
-            
-            const videoElement = document.getElementById('scanner-video');
             const startScanBtn = document.getElementById('startScanBtn');
             const stopScanBtn = document.getElementById('stopScanBtn');
             
-            if (!videoElement) {
-                throw new Error('Video element not found');
-            }
-
-            // Get available video inputs
-            const videoInputDevices = await ZXing.BrowserCodeReader.listVideoInputDevices();
-            
-            let selectedDeviceId;
-            if (videoInputDevices.length > 0) {
-                // Use back camera if available, otherwise use first camera
-                const backCamera = videoInputDevices.find(device => 
-                    device.label.toLowerCase().includes('back') || 
-                    device.label.toLowerCase().includes('rear')
-                );
-                selectedDeviceId = backCamera ? backCamera.deviceId : videoInputDevices[0].deviceId;
+            if (!this.html5QrCode) {
+                this.initializeScanner();
             }
 
             // Update UI
@@ -1414,17 +1415,25 @@ ${specsText}
 
             this.isScanning = true;
 
-            // Start decoding
-            this.codeReader.decodeFromVideoDevice(
-                selectedDeviceId,
-                videoElement,
-                (result, error) => {
-                    if (result) {
-                        this.handleScanResult(result.text);
-                    }
-                    
-                    if (error && !(error instanceof ZXing.NotFoundException)) {
-                        console.error('Scan error:', error);
+            // Start scanning
+            await this.html5QrCode.start(
+                { facingMode: "environment" }, // Prefer rear camera
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    supportedScanTypes: [
+                        Html5QrcodeScanType.SCAN_TYPE_QR_CODE,
+                        Html5QrcodeScanType.SCAN_TYPE_BARCODE
+                    ]
+                },
+                (decodedText) => {
+                    // Success callback
+                    this.handleScanResult(decodedText);
+                },
+                (errorMessage) => {
+                    // Failure callback - ignore most errors as they are common during scanning
+                    if (!errorMessage.includes('NotFoundException')) {
+                        console.log('Scan error:', errorMessage);
                     }
                 }
             );
@@ -1433,7 +1442,15 @@ ${specsText}
 
         } catch (error) {
             console.error('Error starting scan:', error);
-            this.showToast('Gagal memulai scan: ' + error.message, 'danger');
+            
+            // Handle camera permission errors
+            if (error.name === 'NotAllowedError') {
+                this.showToast('Izin kamera ditolak. Silakan izinkan akses kamera.', 'warning');
+            } else if (error.name === 'NotFoundError') {
+                this.showToast('Kamera tidak ditemukan.', 'warning');
+            } else {
+                this.showToast('Gagal memulai scan: ' + error.message, 'danger');
+            }
             
             // Reset UI
             const startScanBtn = document.getElementById('startScanBtn');
@@ -1443,29 +1460,24 @@ ${specsText}
         }
     }
 
-    stopScanning() {
-        if (this.codeReader) {
-            this.codeReader.reset();
-            this.codeReader = null;
+    async stopScanning() {
+        try {
+            if (this.html5QrCode && this.isScanning) {
+                await this.html5QrCode.stop();
+                this.html5QrCode.clear();
+                this.isScanning = false;
+
+                // Update UI
+                const startScanBtn = document.getElementById('startScanBtn');
+                const stopScanBtn = document.getElementById('stopScanBtn');
+                if (startScanBtn) startScanBtn.disabled = false;
+                if (stopScanBtn) stopScanBtn.disabled = true;
+
+                this.showToast('Scanning dihentikan', 'info');
+            }
+        } catch (error) {
+            console.error('Error stopping scan:', error);
         }
-
-        this.isScanning = false;
-
-        // Stop video stream
-        const videoElement = document.getElementById('scanner-video');
-        if (videoElement && videoElement.srcObject) {
-            const tracks = videoElement.srcObject.getTracks();
-            tracks.forEach(track => track.stop());
-            videoElement.srcObject = null;
-        }
-
-        // Update UI
-        const startScanBtn = document.getElementById('startScanBtn');
-        const stopScanBtn = document.getElementById('stopScanBtn');
-        if (startScanBtn) startScanBtn.disabled = false;
-        if (stopScanBtn) stopScanBtn.disabled = true;
-
-        this.showToast('Scanning dihentikan', 'info');
     }
 
     handleScanResult(resultText) {
@@ -1485,7 +1497,7 @@ ${specsText}
         // Auto-stop scanning after successful scan
         this.stopScanning();
         
-        // Play success sound (optional)
+        // Play success sound
         this.playScanSuccessSound();
         
         this.showToast('Barcode berhasil dipindai!', 'success');

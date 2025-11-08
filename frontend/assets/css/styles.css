@@ -437,13 +437,59 @@ img {
     font-size: 0.875rem;
 }
 
-/* Scanner Styles */
+/* Scanner Styles untuk Html5Qrcode */
 #scanArea {
     position: relative;
     overflow: hidden;
     border: 2px solid #007bff !important;
+    min-height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
 }
 
+#qr-reader {
+    width: 100% !important;
+}
+
+#qr-reader__dashboard {
+    padding: 10px;
+}
+
+#qr-reader__scan_region {
+    position: relative;
+}
+
+#qr-reader__scan_region img {
+    display: none;
+}
+
+/* Override default Html5Qrcode styles */
+.html5-qrcode-element {
+    margin: 5px !important;
+}
+
+#html5-qrcode-button-file-selection,
+#html5-qrcode-button-camera-permission,
+#html5-qrcode-button-camera-start,
+#html5-qrcode-button-camera-stop {
+    background: #007bff !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 16px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-family: inherit !important;
+}
+
+#html5-qrcode-anchor-scan-type-change {
+    color: #007bff !important;
+    text-decoration: none !important;
+    font-family: inherit !important;
+}
+
+/* Scanner frame overlay */
 .scanner-overlay {
     position: absolute;
     top: 0;
@@ -511,8 +557,12 @@ img {
         height: 150px;
     }
     
-    #scanner-video {
-        height: 250px;
+    #scanArea {
+        min-height: 250px;
+    }
+    
+    #qr-reader {
+        padding: 10px !important;
     }
 }
 
@@ -524,6 +574,7 @@ img {
     height: 300px;
     background: #f8f9fa;
     color: #6c757d;
+    flex-direction: column;
 }
 
 .scanner-loading .spinner {
@@ -533,10 +584,370 @@ img {
     border-top: 4px solid #007bff;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin-right: 10px;
+    margin-bottom: 10px;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+/* Camera selection dropdown */
+#html5-qrcode-select-camera {
+    width: 100%;
+    padding: 8px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    font-family: inherit;
+}
+
+/* Scanner status messages */
+#qr-reader__status {
+    padding: 10px;
+    text-align: center;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Scanner dashboard improvements */
+#qr-reader__dashboard_section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+#qr-reader__dashboard_section_csr {
+    text-align: center;
+}
+
+/* Focus states for accessibility */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
+}
+
+/* Custom file input styles */
+.form-control[type="file"] {
+    padding: 0.375rem 0.75rem;
+}
+
+.form-control[type="file"]::file-selector-button {
+    padding: 0.375rem 0.75rem;
+    margin: -0.375rem -0.75rem;
+    margin-inline-end: 0.75rem;
+    color: #fff;
+    background-color: #667eea;
+    border: 0;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.form-control[type="file"]::file-selector-button:hover {
+    background-color: #5a6fd8;
+}
+
+/* Print label styles */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .label, .label * {
+        visibility: visible;
+    }
+    .label {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+}
+
+/* Error states */
+.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+.invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545;
+}
+
+.is-invalid ~ .invalid-feedback {
+    display: block;
+}
+
+/* Success states */
+.is-valid {
+    border-color: #198754 !important;
+}
+
+/* Animation for success actions */
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.success-pulse {
+    animation: successPulse 0.5s ease-in-out;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .card {
+        background-color: #2d3748;
+        color: #e2e8f0;
+    }
+    
+    .table {
+        color: #e2e8f0;
+    }
+    
+    .table-light {
+        background-color: #4a5568;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .btn-primary {
+        background: #000;
+        color: #fff;
+    }
+    
+    .sidebar {
+        background: #000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .fa-spinner {
+        animation: none;
+    }
+    
+    .scanner-laser {
+        animation: none;
+    }
+}
+
+/* Custom utility classes for asset management */
+.asset-code {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.currency-format {
+    font-family: 'Courier New', monospace;
+    font-weight: 500;
+}
+
+.status-badge {
+    font-size: 0.7rem;
+    padding: 0.25em 0.6em;
+}
+
+/* QR code preview in table */
+.qr-code-preview {
+    transition: transform 0.2s ease;
+}
+
+.qr-code-preview:hover {
+    transform: scale(1.5);
+    z-index: 10;
+    position: relative;
+}
+
+/* Photo thumbnail styles */
+.photo-thumbnail {
+    max-width: 60px;
+    max-height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    transition: transform 0.2s ease;
+}
+
+.photo-thumbnail:hover {
+    transform: scale(2);
+    z-index: 10;
+    position: relative;
+}
+
+/* Action buttons in table */
+.table-actions {
+    white-space: nowrap;
+}
+
+.table-actions .btn {
+    margin: 0 2px;
+}
+
+/* Filter section styles */
+.filter-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+/* Category list styles */
+.category-item {
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.category-item:hover {
+    background-color: #f8f9fa;
+    border-left-color: #667eea;
+}
+
+/* Modal form styles */
+.modal-form-section {
+    margin-bottom: 1.5rem;
+}
+
+.modal-form-section:last-child {
+    margin-bottom: 0;
+}
+
+/* Required field indicator */
+.required-field::after {
+    content: " *";
+    color: #dc3545;
+}
+
+/* Tooltip styles */
+.custom-tooltip {
+    position: relative;
+}
+
+.custom-tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+/* Loading overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-overlay-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+/* Empty state styles */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Responsive text */
+@media (max-width: 768px) {
+    .responsive-text {
+        font-size: 0.875rem;
+    }
+    
+    .responsive-text-lg {
+        font-size: 1.5rem;
+    }
+}
+
+/* Print optimization */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .table {
+        font-size: 10px;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
+
+/* Scanner specific responsive fixes */
+@media (max-width: 480px) {
+    #qr-reader__dashboard_section {
+        padding: 10px;
+    }
+    
+    .html5-qrcode-element {
+        font-size: 0.8rem !important;
+        padding: 6px 12px !important;
+    }
+}
+
+/* Dark overlay for scanner */
+.scanner-dark-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1040;
+    display: none;
+}
+
+.scanner-dark-overlay.active {
+    display: block;
+}
+
+/* Z-index management */
+.sidebar {
+    z-index: 1000;
+}
+
+.modal {
+    z-index: 1050;
+}
+
+.toast-container {
+    z-index: 1060;
+}
+
+.loading-overlay {
+    z-index: 1070;
 }
