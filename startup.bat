@@ -1,3 +1,3 @@
 @echo off
-cd /d C:\xampp\htdocs\assets
+cd /d E:\apps\assets
 pm2 start server.js
