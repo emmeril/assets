@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const https = require("https");
+const http = require("http");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
@@ -727,11 +727,9 @@ app.get("/", (req, res) => {
 });
 
 
-const key = await fs.readFile("key.pem");
-const cert = await fs.readFile("cert.pem");
 const PORT = process.env.PORT;
-https.createServer({ key, cert }, app).listen(PORT, () => {
-  console.log(`🚀 Serverrunning on https://localhost:${PORT}`);
+http.createServer(app).listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
 }
 startServer();
