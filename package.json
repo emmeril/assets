@@ -30,7 +30,10 @@
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.0",
+    "mysql2": "^3.22.3",
     "path": "^0.12.7",
+    "sequelize": "^6.37.8",
+    "sqlite3": "^6.0.1",
     "uuid": "^11.1.0",
     "winston": "^3.17.0",
     "xlsx": "^0.18.5"
@@ -38,7 +41,8 @@
   "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad",
   "pnpm": {
     "onlyBuiltDependencies": [
-      "bcrypt"
+      "bcrypt",
+      "sqlite3"
     ]
   }
 }
