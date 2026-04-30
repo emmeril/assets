@@ -53,9 +53,9 @@
     </style>
 </head>
 
-<body x-data="Object.assign(reminderApp(), { activeTab: 'aset' })" x-init="init()">
+<body class="app-page" x-data="Object.assign(reminderApp(), { activeTab: 'aset' })" x-init="init()">
 
-    <nav id="sidebar" class="active">
+    <nav id="sidebar">
         <div class="custom-menu">
             <button type="button" id="sidebarCollapse" class="btn btn-primary">
                 <i class="fa fa-bars"></i>
@@ -63,7 +63,13 @@
             </button>
         </div>
         <div class="p-4">
-            <h5 class="logo">Manajemen Aset</h5>
+            <div class="sidebar-brand">
+                <span><i class="fa-solid fa-cubes-stacked"></i></span>
+                <div>
+                    <p>Workspace</p>
+                    <h5>Manajemen Aset</h5>
+                </div>
+            </div>
             <ul class="list-unstyled components mb-5">
                 <li :class="{ 'active': activeTab === 'aset' }">
                     <a href="#" class="text-decoration-none" @click.prevent="activeTab = 'aset'">
@@ -81,7 +87,7 @@
                     </a>
                 </li>
             </ul>
-            <h5 class="logo">Helpdesk</h5>
+            <h5 class="sidebar-section">Helpdesk</h5>
             <ul class="list-unstyled components mb-5">
                 <li :class="{ 'active': activeTab === 'aset' }">
                     <a href="#" class="text-decoration-none" @click.prevent="activeTab = 'aset'">
@@ -104,54 +110,76 @@
         </div>
     </nav>
 
-    <div class="container p-3 p-md-5">
+    <main class="app-content">
         <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-light px-3 rounded mb-4 bg-light shadow-sm sticky-top">
-            <div class="container-fluid justify-content-between">
-                <span class="navbar-brand text-small">Hello, <i class="fa-solid fa-user"></i> <span
-                        x-text="username"></span></span>
-                <button class="btn btn-sm btn-danger" @click="logout"><i
+        <nav class="topbar">
+            <div>
+                <p class="eyebrow mb-1">Asset Management</p>
+                <h1>Dashboard Aset IT</h1>
+            </div>
+            <div class="topbar-actions">
+                <span class="user-pill"><i class="fa-solid fa-user"></i> <span x-text="username"></span></span>
+                <button class="btn btn-danger btn-icon" @click="logout" title="Logout"><i
                         class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </nav>
 
         <!-- Aset -->
         <div x-show="activeTab === 'aset'">
-            <div class="container">
-                <h2 class="mb-4">Manajemen Aset IT <br> PT. Kaiti Global Indonesia</h2>
-            </div>
+            <section class="page-hero">
+                <div>
+                    <p class="eyebrow">PT. Kaiti Global Indonesia</p>
+                    <h2>Inventaris yang mudah dicari, dipindai, dan dirapikan.</h2>
+                </div>
+                <div class="metric-row">
+                    <div class="metric-card">
+                        <span>Total Aset</span>
+                        <strong x-text="assets.length"></strong>
+                    </div>
+                    <div class="metric-card">
+                        <span>Kategori</span>
+                        <strong x-text="allCategories.length"></strong>
+                    </div>
+                    <div class="metric-card">
+                        <span>Hasil Filter</span>
+                        <strong x-text="filteredAssets.length"></strong>
+                    </div>
+                </div>
+            </section>
 
             <!-- Form dan daftar aset -->
             <!-- Daftar Aset -->
-            <div class="container">
+            <div>
                 <div class="card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">Daftar Aset</h5>
+                        <div class="section-heading">
+                            <div>
+                                <p class="eyebrow">Inventory</p>
+                                <h5 class="card-title">Daftar Aset</h5>
+                            </div>
+                            <button class="btn btn-primary btn-sm" @click="openAssetModal(null)">
+                                <i class="fa fa-plus"></i> Tambah Aset
+                            </button>
+                        </div>
 
-                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <div class="toolbar">
                             <button class="btn btn-success btn-sm" @click="exportExcel"><i
                                     class="fa-solid fa-file-export"></i> Export</button>
-                            <form @submit.prevent="importExcel" enctype="multipart/form-data" class="d-flex gap-2">
+                            <form @submit.prevent="importExcel" enctype="multipart/form-data" class="import-form">
                                 <input type="file" accept=".xlsx" @change="handleExcelFile"
                                     class="form-control form-control-sm" />
                                 <button class="btn btn-primary btn-sm" type="submit"><i
-                                        class="fa-solid fa-file-import"></i></button>
+                                        class="fa-solid fa-file-import"></i> Import</button>
                             </form>
-                        </div>
-
-                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
                             <button class="btn btn-outline-primary btn-sm" @click="openScanModal"><i
                                     class="fa-solid fa-camera"></i> Scan
                                 Barcode</button>
-                            <button class="btn btn-primary btn-sm " @click="openAssetModal(null)">
-                                <i class="fa fa-plus"></i> Tambah Aset
-                            </button>
                         </div>
 
                         <!-- Modal Kamera -->
                         <div class="modal fade" id="barcodeScannerModal" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content p-3">
+                                <div class="modal-content">
                                     <div class="modal-header">
                                         <h5 class="modal-title">Scan Barcode</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
@@ -165,11 +193,11 @@
                             </div>
                         </div>
 
-                        <input type="text" class="form-control mb-3" placeholder="🔍 Cari aset..."
+                        <input type="text" class="form-control mb-3 search-input" placeholder="Cari aset berdasarkan kode, brand, serial, atau user"
                             x-model="searchQuery" />
 
                         <!-- Filter -->
-                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mb-4">
+                        <div class="filter-grid mb-4">
                             <div>
                                 <label><i class="fa-solid fa-clipboard-list"></i> Kategori</label>
                                 <select class="form-select" x-model="filters.nameCategory">
@@ -205,24 +233,42 @@
                             </div>
                         </div>
 
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <label>Tampilkan:</label>
-                            <select class="form-select form-select-sm" style="width: auto" x-model.number="perPage">
+                        <div class="table-controls">
+                            <label for="perPageSelect">Tampilkan</label>
+                            <select id="perPageSelect" class="form-select form-select-sm" style="width: auto" x-model.number="perPage">
                                 <template x-for="opt in perPageOptions" :key="opt">
                                     <option :value="opt" x-text="opt"></option>
                                 </template>
                                 <option :value="-1">Lihat Semua</option>
                             </select>
+                            <span class="table-hint">Gunakan scroll horizontal untuk melihat semua kolom.</span>
                         </div>
 
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-sm align-middle text-nowrap">
+                        <div class="table-responsive asset-table-wrap">
+                            <table class="table table-sm align-middle asset-table">
+                                <colgroup>
+                                    <col class="col-no">
+                                    <col class="col-category">
+                                    <col class="col-code">
+                                    <col class="col-qr">
+                                    <col class="col-brand">
+                                    <col class="col-description">
+                                    <col class="col-serial">
+                                    <col class="col-date">
+                                    <col class="col-division">
+                                    <col class="col-user">
+                                    <col class="col-qty">
+                                    <col class="col-price">
+                                    <col class="col-spec">
+                                    <col class="col-photo">
+                                    <col class="col-action">
+                                </colgroup>
                                 <thead class="table-light text-center">
                                     <tr>
                                         <th>#</th>
                                         <th>Kategori</th>
                                         <th>Kode</th>
-                                        <th style="min-width: 80px;">Barcode</th>
+                                        <th>Barcode</th>
                                         <th>Brand</th>
                                         <th>Deskripsi</th>
                                         <th>Serial</th>
@@ -232,7 +278,7 @@
                                         <th>Qty</th>
                                         <th>Harga</th>
                                         <th>Spesifikasi</th>
-                                        <th style="min-width: 70px;">Foto</th>
+                                        <th>Foto</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -240,62 +286,73 @@
                                     <template x-for="(item, i) in paginatedAssets" :key="item.id">
                                         <tr>
                                             <td x-text="i + 1"></td>
-                                            <td x-text="item.nameCategory"></td>
-                                            <td x-text="item.kodeAsset"></td>
+                                            <td class="cell-truncate" :title="item.nameCategory" x-text="item.nameCategory"></td>
+                                            <td><span class="code-pill" x-text="item.kodeAsset"></span></td>
                                             <td class="text-center">
                                                 <img :src="`https://barcode.tec-it.com/barcode.ashx?data=${item.kodeAsset}&code=MobileQRCode&eclevel=L`"
-                                                    alt="QR" style="width: 60px; height: 60px;" />
+                                                    alt="QR" class="qr-image" />
                                             </td>
-                                            <td x-text="item.brand"></td>
-                                            <td x-text="item.description"></td>
-                                            <td x-text="item.serialNumber"></td>
-                                            <td x-text="item.purchaseDate"></td>
-                                            <td x-text="item.division"></td>
-                                            <td x-text="item.username"></td>
-                                            <td x-text="item.quantity"></td>
-                                            <td x-text="item.price.toLocaleString()"></td>
-                                            <td>
+                                            <td class="cell-truncate" :title="item.brand" x-text="item.brand"></td>
+                                            <td class="cell-truncate" :title="item.description" x-text="item.description"></td>
+                                            <td class="cell-truncate text-mono" :title="item.serialNumber" x-text="item.serialNumber"></td>
+                                            <td class="text-muted" x-text="item.purchaseDate"></td>
+                                            <td class="cell-truncate" :title="item.division" x-text="item.division"></td>
+                                            <td class="cell-truncate" :title="item.username" x-text="item.username"></td>
+                                            <td class="text-center" x-text="item.quantity"></td>
+                                            <td class="text-end" x-text="item.price.toLocaleString()"></td>
+                                            <td class="spec-cell">
                                                 <template x-if="['laptop', 'komputer'].includes(item.nameCategory.toLowerCase())">
-                                                    <div>
-                                                        <div><strong>Prosesor:</strong> <span
-                                                                x-text="item.processor"></span></div>
-                                                        <div><strong>RAM:</strong> <span x-text="item.ram"></span></div>
-                                                        <div><strong>HDD:</strong> <span x-text="item.hdd"></span></div>
-                                                        <div><strong>OS:</strong> <span x-text="item.os"></span></div>
+                                                    <div class="spec-list">
+                                                        <span><strong>CPU</strong><em x-text="item.processor || '-'"></em></span>
+                                                        <span><strong>RAM</strong><em x-text="item.ram || '-'"></em></span>
+                                                        <span><strong>HDD</strong><em x-text="item.hdd || '-'"></em></span>
+                                                        <span><strong>OS</strong><em x-text="item.os || '-'"></em></span>
                                                     </div>
                                                 </template>
                                                 <template x-if="!['laptop', 'komputer'].includes(item.nameCategory.toLowerCase())">
-                                                  <span class="text-muted">-</span>
+                                                    <span class="empty-dash">-</span>
                                                 </template>
                                       
                                             </td>
                                             <td class="text-center">
                                                 <img crossorigin="anonymous"
                                                     :src="`/uploads/${item.photo}`" alt="Foto"
-                                                    style="width: 60px; object-fit: cover" x-show="item.photo" />
+                                                    class="asset-photo" x-show="item.photo" />
+                                                <span class="empty-dash" x-show="!item.photo">-</span>
                                             </td>
                                             <td class="text-center">
-                                                <button class="btn btn-sm btn-warning mb-1"
-                                                    @click="openAssetModal(item)">
-                                                    <i class="fa-solid fa-pen-to-square"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-danger mb-1"
-                                                    @click="deleteAsset(item.id)">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-secondary mb-1" @click="printLabel(item)">
-                                                    <i class="fa-solid fa-tag"></i>
-                                                </button>
+                                                <div class="action-group">
+                                                    <button class="btn btn-sm btn-table btn-table-edit"
+                                                        @click="openAssetModal(item)" title="Edit aset">
+                                                        <i class="fa-solid fa-pen-to-square"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-table btn-table-delete"
+                                                        @click="deleteAsset(item.id)" title="Hapus aset">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-table btn-table-print" @click="printLabel(item)" title="Cetak label">
+                                                        <i class="fa-solid fa-tag"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     </template>
+                                    <tr x-show="paginatedAssets.length === 0">
+                                        <td colspan="15" class="empty-cell">
+                                            <div class="empty-table">
+                                                <i class="fa-solid fa-magnifying-glass"></i>
+                                                <strong>Data aset tidak ditemukan</strong>
+                                                <span>Coba ubah kata kunci atau filter pencarian.</span>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
 
 
                         <!-- Pagination -->
-                        <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="table-footer">
                             <p class="text-muted small">
                                 Menampilkan <span x-text="paginatedAssets.length"></span>
                                 dari <span x-text="filteredAssets.length"></span> hasil
@@ -377,7 +434,7 @@
         <!-- Form dan Daftar Aset -->
         <div class="modal fade" id="assetModal" tabindex="-1">
             <div class="modal-dialog modal-lg">
-                <div class="modal-content p-3">
+                <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" x-text="assetForm.id ? 'Edit Aset' : 'Tambah Aset'"></h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -481,7 +538,7 @@
         </div>
 
 
-    </div>
+    </main>
 
     <!-- Toast Notification -->
     <div id="toast" class="toast position-fixed bottom-0 end-0 m-3"></div>
